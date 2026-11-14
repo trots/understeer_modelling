@@ -26,9 +26,10 @@
   .ctl { flex: 1 1 240px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
   .ctl label { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
   .ctl input[type=range] { width: 100%; }
-  .readout { display: flex; flex-wrap: wrap; gap: 8px 24px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 14px; }
+  .readout { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; align-content: center; min-height: 76px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 14px; }
   .readout b { font-weight: 600; }
-  #verdict { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 15px; }
+  #verdict { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 15px; min-height: 72px; display: flex; align-items: center; }
+  .sw.gr { background: var(--gray); }
   #verdict.ok { background: #12351f; border: 1px solid #1f6b3a; color: var(--green); }
   #verdict.bad { background: #3a1518; border: 1px solid #7a262b; color: var(--red); }
   footer { margin-top: 18px; color: var(--muted); font-size: 13px; }
@@ -54,8 +55,7 @@
       <h2>Колесо (вид сверху)</h2>
       <svg viewBox="0 0 440 400">
         <line x1="30" y1="200" x2="410" y2="200" stroke="#3a4552" stroke-dasharray="5 5"/>
-        <line x1="55" y1="200" x2="175" y2="200" stroke="#4ade80" stroke-width="3" marker-end="url(#ah-green)"/>
-        <text x="115" y="186" fill="#4ade80" font-size="13" text-anchor="middle">v — направление движения</text>
+        <text x="408" y="190" fill="#8a94a3" font-size="11" text-anchor="end">исходное направление (прямо)</text>
         <g id="wheelG" transform="translate(220,200) rotate(-6)">
           <rect x="-62" y="-30" width="124" height="60" rx="14" fill="#24303e" stroke="#7dd3fc" stroke-width="2"/>
           <rect x="-40" y="-18" width="80" height="36" rx="8" fill="none" stroke="#3b4a5c"/>
@@ -86,8 +86,9 @@
   <p class="legend">
     <span class="sw o"></span>Fx — продольная сила (газ/тормоз)
     <span class="sw c"></span>Fy — боковая сила (поворот)
-    <span class="sw g"></span>результирующая в пределах сцепления
+    <span class="sw g"></span>результирующая в пределах сцепления и направление движения
     <span class="sw r"></span>насыщение: шина не выдаёт запрошенную силу
+    <span class="sw gr"></span>куда повёрнуто колесо
   </p>
 
   <div class="controls">
@@ -112,6 +113,7 @@
     <div>Предел μ·Fz: <b id="rLim">—</b></div>
     <div>Использование сцепления: <b id="rUtil">—</b></div>
     <div>Доступно боковой силы: <b id="rFyAvail">—</b></div>
+    <div>Угол сноса α: <b id="rSlip">—</b></div>
   </div>
 
   <div id="verdict" class="ok"></div>
@@ -165,12 +167,19 @@ function compute() {
   const h = { x: Math.cos(rad), y: -Math.sin(rad) };
   const n = { x: -Math.sin(rad) * sgn, y: -Math.cos(rad) * sgn };
 
+  const fyAch = Math.min(fy, fyAvail);
+  const rAct = fyAch > 0 ? MASS * SHARE * V * V / fyAch : Infinity;
+  const betaDeg = Math.abs(delta) > 0.05 ? Math.atan(BASE / rAct) * 180 / Math.PI * sgn : 0;
+  const slip = Math.max(0, Math.abs(delta) - Math.abs(betaDeg));
+  const vb = { x: Math.cos(betaDeg * Math.PI / 180), y: -Math.sin(betaDeg * Math.PI / 180) };
+
   $('wheelG').setAttribute('transform', `translate(220,200) rotate(${(-delta).toFixed(2)})`);
   $('deltaLabel').textContent = `δ = ${delta}°` + (delta > 0 ? ' (поворот влево)' : delta < 0 ? ' (поворот вправо)' : ' (прямо)');
 
   const fxL = fx * K_WHEEL;
   const fyL = Math.min(fy * K_WHEEL, 175);
-  let dw = ln(CX, CY, CX + h.x * 115, CY + h.y * 115, '#94a3b8', 2, 'ah-gray');
+  let dw = ln(CX + vb.x * 66, CY + vb.y * 66, CX + vb.x * 206, CY + vb.y * 206, '#4ade80', 3.5, 'ah-green');
+  dw += ln(CX + h.x * 66, CY + h.y * 66, CX + h.x * 176, CY + h.y * 176, '#94a3b8', 2, 'ah-gray');
   if (Math.abs(fxL) > 1) dw += ln(CX, CY, CX + h.x * fxL, CY + h.y * fxL, '#fb923c', 4, 'ah-orange');
   if (fyL > 1) dw += ln(CX, CY, CX + n.x * fyL, CY + n.y * fyL, '#38bdf8', 4, 'ah-cyan');
   $('dynWheel').innerHTML = dw;
@@ -196,11 +205,13 @@ function compute() {
   $('rLim').textContent = kn(LIMIT);
   $('rUtil').textContent = (util * 100).toFixed(0) + '%';
   $('rFyAvail').textContent = sat ? kn(fyAvail) : '—';
+  $('rSlip').textContent = slip.toFixed(1) + '°';
+  $('rSlip').style.color = slip > 0.05 ? '#f87171' : '';
 
   const v = $('verdict');
   if (sat) {
     v.className = 'bad';
-    v.textContent = `Проскальзывание! Шина насыщена: доступно боковой силы ${kn(fyAvail)} при потребности ${kn(fy)} — автомобиль недоповорачивает и «смыкает» поворот.`;
+    v.textContent = `Проскальзывание! Шина насыщена: доступно боковой силы ${kn(fyAvail)} при потребности ${kn(fy)}. Угол сноса α = ${slip.toFixed(1)}° — колесо «плывёт» ближе к прямой, автомобиль недоповорачивает.`;
   } else {
     v.className = 'ok';
     v.textContent = 'Сцепление есть: шина выдаёт нужную силу, колесо отрабатывает поворот.';

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Снос передней оси — круг сцепления</title>
+<style>
+  :root {
+    --bg: #101318; --panel: #1a1f27; --border: #2a313c; --text: #d7dde6; --muted: #8a94a3;
+    --green: #4ade80; --red: #f87171; --orange: #fb923c; --cyan: #38bdf8; --gray: #94a3b8;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, sans-serif; }
+  main { max-width: 1000px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .panels { display: flex; flex-wrap: wrap; gap: 16px; }
+  .panel { flex: 1 1 420px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 12px 4px; }
+  .panel h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); font-weight: 600; }
+  .panel svg { width: 100%; height: auto; display: block; }
+  .legend { color: var(--muted); font-size: 13px; margin: 10px 2px 0; }
+  .sw { display: inline-block; width: 12px; height: 4px; border-radius: 2px; margin: 0 5px 2px 12px; vertical-align: middle; }
+  .sw.o { background: var(--orange); } .sw.c { background: var(--cyan); }
+  .sw.g { background: var(--green); } .sw.r { background: var(--red); }
+  .controls { display: flex; flex-wrap: wrap; gap: 16px; margin: 20px 0 12px; }
+  .ctl { flex: 1 1 240px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .ctl label { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+  .ctl input[type=range] { width: 100%; }
+  .readout { display: flex; flex-wrap: wrap; gap: 8px 24px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 14px; }
+  .readout b { font-weight: 600; }
+  #verdict { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 15px; }
+  #verdict.ok { background: #12351f; border: 1px solid #1f6b3a; color: var(--green); }
+  #verdict.bad { background: #3a1518; border: 1px solid #7a262b; color: var(--red); }
+  footer { margin-top: 18px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <marker id="ah-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#4ade80"/></marker>
+    <marker id="ah-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#f87171"/></marker>
+    <marker id="ah-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#fb923c"/></marker>
+    <marker id="ah-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#38bdf8"/></marker>
+    <marker id="ah-gray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker>
+  </defs>
+</svg>
+
+<main>
+  <h1>Снос передней оси: круг сцепления</h1>
+  <p class="sub">Как разгон или торможение в повороте съедает запас сцепления передних колёс</p>
+
+  <div class="panels">
+    <section class="panel">
+      <h2>Колесо (вид сверху)</h2>
+      <svg viewBox="0 0 440 400">
+        <line x1="30" y1="200" x2="410" y2="200" stroke="#3a4552" stroke-dasharray="5 5"/>
+        <line x1="55" y1="200" x2="175" y2="200" stroke="#4ade80" stroke-width="3" marker-end="url(#ah-green)"/>
+        <text x="115" y="186" fill="#4ade80" font-size="13" text-anchor="middle">v — направление движения</text>
+        <g id="wheelG" transform="translate(220,200) rotate(-6)">
+          <rect x="-62" y="-30" width="124" height="60" rx="14" fill="#24303e" stroke="#7dd3fc" stroke-width="2"/>
+          <rect x="-40" y="-18" width="80" height="36" rx="8" fill="none" stroke="#3b4a5c"/>
+          <line x1="-20" y1="-30" x2="-20" y2="30" stroke="#3b4a5c"/>
+          <line x1="20" y1="-30" x2="20" y2="30" stroke="#3b4a5c"/>
+        </g>
+        <text id="deltaLabel" x="220" y="330" fill="#d7dde6" font-size="14" text-anchor="middle"></text>
+        <text x="220" y="352" fill="#8a94a3" font-size="12" text-anchor="middle">колесо развёрнуто на угол δ относительно направления движения</text>
+        <g id="dynWheel"></g>
+      </svg>
+    </section>
+
+    <section class="panel">
+      <h2>Круг сцепления (силы в пятне контакта)</h2>
+      <svg viewBox="0 0 440 400">
+        <line x1="220" y1="30" x2="220" y2="370" stroke="#3a4552"/>
+        <line x1="40" y1="200" x2="400" y2="200" stroke="#3a4552"/>
+        <circle cx="220" cy="200" r="140" fill="#1d2632" stroke="#55657a" stroke-width="2"/>
+        <text x="400" y="190" fill="#8a94a3" font-size="12" text-anchor="end">Fx — разгон →</text>
+        <text x="42" y="190" fill="#8a94a3" font-size="12">← тормоз — Fx</text>
+        <text x="228" y="46" fill="#8a94a3" font-size="12">Fy — поворот влево</text>
+        <text x="228" y="366" fill="#8a94a3" font-size="12">Fy — поворот вправо</text>
+        <g id="dynCircle"></g>
+      </svg>
+    </section>
+  </div>
+
+  <p class="legend">
+    <span class="sw o"></span>Fx — продольная сила (газ/тормоз)
+    <span class="sw c"></span>Fy — боковая сила (поворот)
+    <span class="sw g"></span>результирующая в пределах сцепления
+    <span class="sw r"></span>насыщение: шина не выдаёт запрошенную силу
+  </p>
+
+  <div class="controls">
+    <div class="ctl">
+      <label>Газ <span id="gasV">0%</span></label>
+      <input type="range" id="gas" min="0" max="100" step="1" value="0">
+    </div>
+    <div class="ctl">
+      <label>Тормоз <span id="brakeV">0%</span></label>
+      <input type="range" id="brake" min="0" max="100" step="1" value="0">
+    </div>
+    <div class="ctl">
+      <label>Угол поворота колёс δ <span id="steerV">6°</span></label>
+      <input type="range" id="steer" min="-30" max="30" step="0.5" value="6">
+    </div>
+  </div>
+
+  <div class="readout">
+    <div>Fx: <b id="rFx">—</b></div>
+    <div>Fy (потребность в повороте): <b id="rFy">—</b></div>
+    <div>|F| результирующая: <b id="rF">—</b></div>
+    <div>Предел μ·Fz: <b id="rLim">—</b></div>
+    <div>Использование сцепления: <b id="rUtil">—</b></div>
+    <div>Доступно боковой силы: <b id="rFyAvail">—</b></div>
+  </div>
+
+  <div id="verdict" class="ok"></div>
+
+  <footer>
+    Модель: v = 50 км/ч · m = 1400 кг · база L = 2,7 м · μ = 1,0 ·
+    нагрузка на переднюю ось ≈ 60% массы (Fz ≈ 8,2 кН) · предел сцепления передней оси μ·Fz ≈ 8,2 кН ·
+    радиус поворота R = L / tan δ
+  </footer>
+</main>
+
+<script>
+const MU = 1.0;
+const MASS = 1400;
+const G = 9.81;
+const SHARE = 0.6;
+const V = 50 / 3.6;
+const BASE = 2.7;
+const FZ = SHARE * MASS * G;
+const LIMIT = MU * FZ;
+const CX = 220, CY = 200;
+const K_WHEEL = 150 / LIMIT;
+const K_CIRCLE = 140 / LIMIT;
+
+const $ = id => document.getElementById(id);
+const kn = n => (n / 1000).toFixed(2) + ' кН';
+const f1 = n => n.toFixed(1);
+
+function ln(x1, y1, x2, y2, stroke, w, mk) {
+  return `<line x1="${f1(x1)}" y1="${f1(y1)}" x2="${f1(x2)}" y2="${f1(y2)}" stroke="${stroke}" stroke-width="${w}" marker-end="url(#${mk})"/>`;
+}
+
+function compute() {
+  const gas = +$('gas').value, brake = +$('brake').value, delta = +$('steer').value;
+  $('gasV').textContent = gas + '%';
+  $('brakeV').textContent = brake + '%';
+  $('steerV').textContent = delta + '°';
+
+  const fx = (gas - brake) / 100 * LIMIT;
+  let fy = 0;
+  if (Math.abs(delta) > 0.05) {
+    const R = BASE / Math.tan(Math.abs(delta) * Math.PI / 180);
+    fy = SHARE * MASS * V * V / R;
+  }
+  const util = Math.hypot(fx, fy) / LIMIT;
+  const sat = util > 1;
+  const fyAvail = Math.sqrt(Math.max(0, LIMIT * LIMIT - fx * fx));
+
+  const rad = delta * Math.PI / 180;
+  const sgn = Math.sign(delta);
+  const h = { x: Math.cos(rad), y: -Math.sin(rad) };
+  const n = { x: -Math.sin(rad) * sgn, y: -Math.cos(rad) * sgn };
+
+  $('wheelG').setAttribute('transform', `translate(220,200) rotate(${(-delta).toFixed(2)})`);
+  $('deltaLabel').textContent = `δ = ${delta}°` + (delta > 0 ? ' (поворот влево)' : delta < 0 ? ' (поворот вправо)' : ' (прямо)');
+
+  const fxL = fx * K_WHEEL;
+  const fyL = Math.min(fy * K_WHEEL, 175);
+  let dw = ln(CX, CY, CX + h.x * 115, CY + h.y * 115, '#94a3b8', 2, 'ah-gray');
+  if (Math.abs(fxL) > 1) dw += ln(CX, CY, CX + h.x * fxL, CY + h.y * fxL, '#fb923c', 4, 'ah-orange');
+  if (fyL > 1) dw += ln(CX, CY, CX + n.x * fyL, CY + n.y * fyL, '#38bdf8', 4, 'ah-cyan');
+  $('dynWheel').innerHTML = dw;
+
+  const fxP = Math.max(-LIMIT, Math.min(LIMIT, fx)) * K_CIRCLE;
+  const fyS = fy * sgn;
+  const fyP = Math.max(-LIMIT, Math.min(LIMIT, fyS)) * K_CIRCLE;
+  const s = sat ? 1 / util : 1;
+  const resX = fx * K_CIRCLE * s, resY = fyS * K_CIRCLE * s;
+  let dc = '';
+  if (Math.abs(fxP) > 1) dc += ln(CX, CY, CX + fxP, CY, '#fb923c', 2.5, 'ah-orange');
+  if (Math.abs(fyP) > 1) dc += ln(CX, CY, CX, CY - fyP, '#38bdf8', 2.5, 'ah-cyan');
+  if (Math.abs(fxP) > 1 && Math.abs(fyP) > 1)
+    dc += `<path d="M ${f1(CX + fxP)} ${CY} L ${f1(CX + fxP)} ${f1(CY - fyP)} L ${CX} ${f1(CY - fyP)}" stroke="#475569" fill="none" stroke-dasharray="4 4"/>`;
+  dc += ln(CX, CY, CX + resX, CY - resY, sat ? '#f87171' : '#4ade80', 3.5, sat ? 'ah-red' : 'ah-green');
+  if (sat)
+    dc += `<circle cx="${f1(CX + fxP)}" cy="${f1(CY - fyP)}" r="5" fill="none" stroke="#f87171" stroke-width="2"/>`;
+  $('dynCircle').innerHTML = dc;
+
+  $('rFx').textContent = kn(fx) + (fx > 50 ? ' (разгон)' : fx < -50 ? ' (торможение)' : '');
+  $('rFy').textContent = kn(fy);
+  $('rF').textContent = kn(Math.hypot(fx, fy));
+  $('rLim').textContent = kn(LIMIT);
+  $('rUtil').textContent = (util * 100).toFixed(0) + '%';
+  $('rFyAvail').textContent = sat ? kn(fyAvail) : '—';
+
+  const v = $('verdict');
+  if (sat) {
+    v.className = 'bad';
+    v.textContent = `Проскальзывание! Шина насыщена: доступно боковой силы ${kn(fyAvail)} при потребности ${kn(fy)} — автомобиль недоповорачивает и «смыкает» поворот.`;
+  } else {
+    v.className = 'ok';
+    v.textContent = 'Сцепление есть: шина выдаёт нужную силу, колесо отрабатывает поворот.';
+  }
+}
+
+['gas', 'brake', 'steer'].forEach(id => $(id).addEventListener('input', compute));
+compute();
+</script>
+</body>
+</html>

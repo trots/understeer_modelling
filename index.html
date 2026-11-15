@@ -30,6 +30,7 @@
   .ctl { flex: 1 1 240px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
   .ctl label { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
   .ctl input[type=range] { width: 100%; }
+  .ctl select { width: 100%; background: #141a22; color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 7px 8px; font-size: 14px; }
   .readout { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; align-content: center; min-height: 76px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 14px; }
   .readout b { font-weight: 600; }
   #verdict { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 15px; min-height: 72px; display: flex; align-items: center; }
@@ -102,6 +103,18 @@
       <label>Угол поворота колёс δ <span id="steerV">6°</span></label>
       <input type="range" id="steer" min="-30" max="30" step="0.5" value="6">
     </div>
+    <div class="ctl">
+      <label>Скорость <span id="speedV">50 км/ч</span></label>
+      <input type="range" id="speed" min="20" max="100" step="5" value="50">
+    </div>
+    <div class="ctl">
+      <label>Поверхность</label>
+      <select id="surface">
+        <option value="1.0" selected>Сухой асфальт (μ = 1,0)</option>
+        <option value="0.6">Мокрая дорога (μ = 0,6)</option>
+        <option value="0.2">Лёд (μ = 0,2)</option>
+      </select>
+    </div>
   </div>
 
   <div class="readout">
@@ -116,7 +129,7 @@
 
   <div id="verdict" class="ok"></div>
 
-  <footer>v = 50 км/ч · μ = 1,0 · предел μ·Fz ≈ 8,2 кН</footer>
+  <footer id="fline"></footer>
 
   <details class="legend">
     <summary>Обозначения и параметры модели</summary>
@@ -128,23 +141,18 @@
         <span class="sw r"></span>насыщение шины (превышение предела сцепления)
         <span class="sw gr"></span>направление колёс
       </p>
-      <p>v = 50 км/ч · m = 1400 кг · база L = 2,7 м · μ = 1,0 · нагрузка на переднюю ось ≈ 60% массы (Fz ≈ 8,2 кН) · предел сцепления передней оси μ·Fz ≈ 8,2 кН · радиус поворота R = L / tan δ</p>
+      <p>m = 1400 кг · база L = 2,7 м · нагрузка на переднюю ось ≈ 60% массы (Fz ≈ 8,2 кН) · предел сцепления передней оси μ·Fz · радиус поворота R = L / tan δ</p>
     </div>
   </details>
 </main>
 
 <script>
-const MU = 1.0;
 const MASS = 1400;
 const G = 9.81;
 const SHARE = 0.6;
-const V = 50 / 3.6;
 const BASE = 2.7;
 const FZ = SHARE * MASS * G;
-const LIMIT = MU * FZ;
 const CX = 220, CY = 200;
-const K_WHEEL = 150 / LIMIT;
-const K_CIRCLE = 140 / LIMIT;
 
 const $ = id => document.getElementById(id);
 const kn = n => (n / 1000).toFixed(2) + ' кН';
@@ -156,9 +164,16 @@ function ln(x1, y1, x2, y2, stroke, w, mk) {
 
 function compute() {
   const gas = +$('gas').value, brake = +$('brake').value, delta = +$('steer').value;
+  const mu = +$('surface').value;
+  const vKmh = +$('speed').value;
+  const V = vKmh / 3.6;
+  const LIMIT = mu * FZ;
+  const K_WHEEL = 150 / LIMIT;
+  const K_CIRCLE = 140 / LIMIT;
   $('gasV').textContent = gas + '%';
   $('brakeV').textContent = brake + '%';
   $('steerV').textContent = delta + '°';
+  $('speedV').textContent = vKmh + ' км/ч';
 
   const fx = (gas - brake) / 100 * LIMIT;
   let fy = 0;
@@ -219,6 +234,7 @@ function compute() {
   $('rFyAvail').textContent = sat ? kn(fyAvail) : '—';
   $('rSlip').textContent = slip.toFixed(1) + '°';
   $('rSlip').style.color = slip > 0.05 ? '#f87171' : '';
+  $('fline').textContent = `v = ${vKmh} км/ч · μ = ${mu.toFixed(1)} · предел μ·Fz ≈ ${kn(LIMIT)}`;
 
   const v = $('verdict');
   if (sat) {
@@ -230,7 +246,7 @@ function compute() {
   }
 }
 
-['gas', 'brake', 'steer'].forEach(id => $(id).addEventListener('input', compute));
+['gas', 'brake', 'steer', 'speed', 'surface'].forEach(id => $(id).addEventListener('input', compute));
 compute();
 </script>
 </body>

@@ -338,8 +338,19 @@ function compute() {
   $('speedV').textContent = vKmh + ' ' + t('u_kmh');
 
   const fxReq = (gas - brake) / 100 * LIMIT_ST;
-  const ax = -fxReq / ((fxReq < 0 ? BIAS : 1) * MASS);
-  const fzDyn = Math.min(0.9 * MASS * G, Math.max(0.25 * MASS * G, MASS * (SHARE * G + ax * H / BASE)));
+  const slideMu = SLIDE * mu;
+  const fzFor = f => {
+    const ax = -f / ((f < 0 ? BIAS : 1) * MASS);
+    return Math.min(0.9 * MASS * G, Math.max(0.25 * MASS * G, MASS * (SHARE * G + ax * H / BASE)));
+  };
+  let fzDyn = fzFor(fxReq);
+  const locked = !$('abs').checked && Math.abs(fxReq) > slideMu * fzDyn;
+  const applyGrip = fz => locked
+    ? Math.sign(fxReq) * slideMu * fz
+    : Math.sign(fxReq) * Math.min(Math.abs(fxReq), mu * fz);
+  let fx = applyGrip(fzDyn);
+  fzDyn = fzFor(fx);
+  fx = applyGrip(fzDyn);
   const LIMIT = mu * fzDyn;
   const K_CIRCLE = 140 / LIMIT;
   let fy = 0;
@@ -347,9 +358,6 @@ function compute() {
     const R = BASE / Math.tan(Math.abs(delta) * Math.PI / 180);
     fy = SHARE * MASS * V * V / R;
   }
-  const slideMu = SLIDE * mu;
-  const locked = !$('abs').checked && Math.abs(fxReq) > slideMu * fzDyn;
-  const fx = locked ? Math.sign(fxReq) * slideMu * fzDyn : fxReq;
   const util = Math.hypot(fx, fy) / LIMIT;
   const sat = util > 1;
   const fyAvail = locked ? 0 : Math.sqrt(Math.max(0, LIMIT * LIMIT - fx * fx));
@@ -391,11 +399,10 @@ function compute() {
   if (fyL > 1) dw += ln(CX, CY, CX + n.x * fyL, CY + n.y * fyL, 'c-c', 4, 'ah-cyan');
   $('dynWheel').innerHTML = dw;
 
-  const fxP = Math.max(-LIMIT, Math.min(LIMIT, fx)) * K_CIRCLE;
+  const fxP = fx * K_CIRCLE;
   const fyS = fy * sgn;
   const fyP = Math.max(-LIMIT, Math.min(LIMIT, fyS)) * K_CIRCLE;
-  const s = sat ? 1 / util : 1;
-  const resX = fx * K_CIRCLE * s, resY = fyS * K_CIRCLE * s;
+  const resX = fxP, resY = fyAch * sgn * K_CIRCLE;
   let dc = '';
   if (Math.abs(fxP) > 1) dc += ln(CX, CY, CX + fxP, CY, 'c-o', 2.5, 'ah-orange');
   if (Math.abs(fyP) > 1) dc += ln(CX, CY, CX, CY - fyP, 'c-c', 2.5, 'ah-cyan');

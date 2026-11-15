@@ -31,6 +31,8 @@
   .ctl label { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
   .ctl input[type=range] { width: 100%; }
   .ctl select { width: 100%; background: #141a22; color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 7px 8px; font-size: 14px; }
+  .chk { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 5px 0; }
+  .chk input { width: 16px; height: 16px; accent-color: #4ade80; }
   .readout { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; align-content: center; min-height: 76px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 14px; }
   .readout b { font-weight: 600; }
   #verdict { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 15px; min-height: 72px; display: flex; align-items: center; }
@@ -115,6 +117,9 @@
         <option value="0.2">Лёд (μ = 0,2)</option>
       </select>
     </div>
+    <div class="ctl">
+      <label class="chk"><input type="checkbox" id="abs" checked> ABS (антиблокировочная система)</label>
+    </div>
   </div>
 
   <div class="readout">
@@ -142,7 +147,7 @@
         <span class="sw r"></span>насыщение шины (превышение предела сцепления)
         <span class="sw gr"></span>направление колёс
       </p>
-      <p>m = 1400 кг · база L = 2,7 м · высота центра тяжести h = 0,5 м · нагрузка на переднюю ось ≈ 60% массы (Fz ≈ 8,2 кН стат.) · предел сцепления μ·Fz_дин · торможение 70% на переднюю ось · передний привод · радиус поворота R = L / tan δ</p>
+      <p>m = 1400 кг · база L = 2,7 м · высота центра тяжести h = 0,5 м · нагрузка на переднюю ось ≈ 60% массы (Fz ≈ 8,2 кН стат.) · предел сцепления μ·Fz_дин · торможение 70% на переднюю ось · передний привод · радиус поворота R = L / tan δ · при ABS выкл: блокировка при |Fx| &gt; 0.7·μ·Fz_дин, боковая сила скользящего колеса = 0</p>
     </div>
   </details>
 </main>
@@ -154,6 +159,7 @@ const SHARE = 0.6;
 const BASE = 2.7;
 const H = 0.5;
 const BIAS = 0.7;
+const SLIDE = 0.7;
 const FZ = SHARE * MASS * G;
 const CX = 220, CY = 200;
 
@@ -177,8 +183,8 @@ function compute() {
   $('steerV').textContent = delta + '°';
   $('speedV').textContent = vKmh + ' км/ч';
 
-  const fx = (gas - brake) / 100 * LIMIT_ST;
-  const ax = -fx / ((fx < 0 ? BIAS : 1) * MASS);
+  const fxReq = (gas - brake) / 100 * LIMIT_ST;
+  const ax = -fxReq / ((fxReq < 0 ? BIAS : 1) * MASS);
   const fzDyn = Math.min(0.9 * MASS * G, Math.max(0.25 * MASS * G, MASS * (SHARE * G + ax * H / BASE)));
   const LIMIT = mu * fzDyn;
   const K_CIRCLE = 140 / LIMIT;
@@ -187,9 +193,13 @@ function compute() {
     const R = BASE / Math.tan(Math.abs(delta) * Math.PI / 180);
     fy = SHARE * MASS * V * V / R;
   }
+  const slideMu = SLIDE * mu;
+  const locked = !$('abs').checked && Math.abs(fxReq) > slideMu * fzDyn;
+  const fx = locked ? Math.sign(fxReq) * slideMu * fzDyn : fxReq;
   const util = Math.hypot(fx, fy) / LIMIT;
   const sat = util > 1;
-  const fyAvail = Math.sqrt(Math.max(0, LIMIT * LIMIT - fx * fx));
+  const fyAvail = locked ? 0 : Math.sqrt(Math.max(0, LIMIT * LIMIT - fx * fx));
+  const slide = sat || locked;
 
   const rad = delta * Math.PI / 180;
   const sgn = Math.sign(delta);
@@ -203,8 +213,8 @@ function compute() {
   const vb = { x: Math.cos(betaDeg * Math.PI / 180), y: -Math.sin(betaDeg * Math.PI / 180) };
 
   $('wheelG').setAttribute('transform', `translate(220,200) rotate(${(-delta).toFixed(2)})`);
-  $('wheelG').classList.toggle('slip', sat);
-  $('skid').innerHTML = sat
+  $('wheelG').classList.toggle('slip', slide);
+  $('skid').innerHTML = slide
     ? `<g transform="translate(220,200) rotate(${(-betaDeg).toFixed(1)})"><path d="M -64 -13 L -200 -4 L -200 4 L -64 13 Z" fill="rgba(248,113,113,0.16)"/><line x1="-70" y1="0" x2="-190" y2="0" stroke="rgba(248,113,113,0.45)" stroke-width="5" stroke-linecap="round" stroke-dasharray="14 10"/></g>`
     : '';
   $('deltaLabel').textContent = `δ = ${delta}°` + (delta > 0 ? ' (поворот влево)' : delta < 0 ? ' (поворот вправо)' : ' (прямо)');
@@ -227,8 +237,8 @@ function compute() {
   if (Math.abs(fyP) > 1) dc += ln(CX, CY, CX, CY - fyP, '#38bdf8', 2.5, 'ah-cyan');
   if (Math.abs(fxP) > 1 && Math.abs(fyP) > 1)
     dc += `<path d="M ${f1(CX + fxP)} ${CY} L ${f1(CX + fxP)} ${f1(CY - fyP)} L ${CX} ${f1(CY - fyP)}" stroke="#475569" fill="none" stroke-dasharray="4 4"/>`;
-  dc += ln(CX, CY, CX + resX, CY - resY, sat ? '#f87171' : '#4ade80', 3.5, sat ? 'ah-red' : 'ah-green');
-  if (sat)
+  dc += ln(CX, CY, CX + resX, CY - resY, slide ? '#f87171' : '#4ade80', 3.5, slide ? 'ah-red' : 'ah-green');
+  if (slide)
     dc += `<circle cx="${f1(CX + fxP)}" cy="${f1(CY - fyP)}" r="5" fill="none" stroke="#f87171" stroke-width="2"/>`;
   $('dynCircle').innerHTML = dc;
 
@@ -238,13 +248,16 @@ function compute() {
   $('rLim').textContent = kn(LIMIT);
   $('rFz').textContent = kn(fzDyn);
   $('rUtil').textContent = (util * 100).toFixed(0) + '%';
-  $('rFyAvail').textContent = sat ? kn(fyAvail) : '—';
+  $('rFyAvail').textContent = slide ? kn(fyAvail) : '—';
   $('rSlip').textContent = slip.toFixed(1) + '°';
   $('rSlip').style.color = slip > 0.05 ? '#f87171' : '';
   $('fline').textContent = `v = ${vKmh} км/ч · μ = ${mu.toFixed(1)} · предел μ·Fz ≈ ${kn(LIMIT)}`;
 
   const v = $('verdict');
-  if (sat) {
+  if (locked) {
+    v.className = 'bad';
+    v.textContent = 'Блокировка колёс: шина скользит, боковая сила исчезает — траектория распрямляется.';
+  } else if (sat) {
     v.className = 'bad';
     v.textContent = `Превышение предела сцепления: шина насыщена, доступна боковая сила ${kn(fyAvail)} при требуемой ${kn(fy)}. Угол сноса α = ${slip.toFixed(1)}° — направление движения отклоняется к прямой, автомобиль недоповорачивает.`;
   } else {
@@ -253,7 +266,7 @@ function compute() {
   }
 }
 
-['gas', 'brake', 'steer', 'speed', 'surface'].forEach(id => $(id).addEventListener('input', compute));
+['gas', 'brake', 'steer', 'speed', 'surface', 'abs'].forEach(id => $(id).addEventListener('input', compute));
 compute();
 </script>
 </body>

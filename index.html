@@ -203,6 +203,8 @@ const BASE = 2.7;
 const H = 0.5;
 const BIAS = 0.7;
 const SLIDE = 0.7;
+const FX_GAS_MAX = 8000;
+const FX_BRAKE_MAX = 12000;
 const FZ = SHARE * MASS * G;
 const CX = 220, CY = 200;
 
@@ -337,7 +339,7 @@ function compute() {
   $('steerV').textContent = delta + '°';
   $('speedV').textContent = vKmh + ' ' + t('u_kmh');
 
-  const fxReq = (gas - brake) / 100 * LIMIT_ST;
+  const fxReq = (gas * FX_GAS_MAX - brake * FX_BRAKE_MAX) / 100;
   const slideMu = SLIDE * mu;
   const fzFor = f => {
     const ax = -f / ((f < 0 ? BIAS : 1) * MASS);
@@ -345,9 +347,11 @@ function compute() {
   };
   let fzDyn = fzFor(fxReq);
   const locked = !$('abs').checked && Math.abs(fxReq) > slideMu * fzDyn;
-  const applyGrip = fz => locked
-    ? Math.sign(fxReq) * slideMu * fz
-    : Math.sign(fxReq) * Math.min(Math.abs(fxReq), mu * fz);
+  const applyGrip = fz => {
+    if (locked) return Math.sign(fxReq) * slideMu * fz;
+    const cap = (fxReq < 0 ? BIAS : 1) * mu * MASS * G;
+    return Math.sign(fxReq) * Math.min(Math.abs(fxReq), mu * fz, cap);
+  };
   let fx = applyGrip(fzDyn);
   fzDyn = fzFor(fx);
   fx = applyGrip(fzDyn);
@@ -359,6 +363,7 @@ function compute() {
     fy = SHARE * MASS * V * V / R;
   }
   const util = Math.hypot(fx, fy) / LIMIT;
+  const utilReq = Math.hypot(fxReq, fy) / LIMIT;
   const sat = util > 1;
   const fyAvail = locked ? 0 : Math.sqrt(Math.max(0, LIMIT * LIMIT - fx * fx));
   const slide = sat || locked;
@@ -418,7 +423,7 @@ function compute() {
   $('rF').textContent = kn(Math.hypot(fx, fy));
   $('rLim').textContent = kn(LIMIT);
   $('rFz').textContent = kn(fzDyn);
-  $('rUtil').textContent = (util * 100).toFixed(0) + '%';
+  $('rUtil').textContent = (utilReq * 100).toFixed(0) + '%';
   $('rFyAvail').textContent = slide ? kn(fyAvail) : '—';
   $('rSlip').textContent = slip.toFixed(1) + '°';
   $('rSlip').style.color = slip > 0.05 ? 'var(--red)' : '';

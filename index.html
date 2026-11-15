@@ -30,6 +30,8 @@
   .readout b { font-weight: 600; }
   #verdict { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 15px; min-height: 72px; display: flex; align-items: center; }
   .sw.gr { background: var(--gray); }
+  #wheelG .tire { stroke: #7dd3fc; transition: stroke .2s, filter .2s; }
+  #wheelG.slip .tire { stroke: #f87171; filter: drop-shadow(0 0 7px rgba(248,113,113,.7)); }
   #verdict.ok { background: #12351f; border: 1px solid #1f6b3a; color: var(--green); }
   #verdict.bad { background: #3a1518; border: 1px solid #7a262b; color: var(--red); }
   footer { margin-top: 18px; color: var(--muted); font-size: 13px; }
@@ -56,8 +58,9 @@
       <svg viewBox="0 0 440 400">
         <line x1="30" y1="200" x2="410" y2="200" stroke="#3a4552" stroke-dasharray="5 5"/>
         <text x="408" y="190" fill="#8a94a3" font-size="11" text-anchor="end">исходное направление (прямо)</text>
+        <g id="skid"></g>
         <g id="wheelG" transform="translate(220,200) rotate(-6)">
-          <rect x="-62" y="-30" width="124" height="60" rx="14" fill="#24303e" stroke="#7dd3fc" stroke-width="2"/>
+          <rect class="tire" x="-62" y="-30" width="124" height="60" rx="14" fill="#24303e" stroke="#7dd3fc" stroke-width="2"/>
           <rect x="-40" y="-18" width="80" height="36" rx="8" fill="none" stroke="#3b4a5c"/>
           <line x1="-20" y1="-30" x2="-20" y2="30" stroke="#3b4a5c"/>
           <line x1="20" y1="-30" x2="20" y2="30" stroke="#3b4a5c"/>
@@ -174,6 +177,10 @@ function compute() {
   const vb = { x: Math.cos(betaDeg * Math.PI / 180), y: -Math.sin(betaDeg * Math.PI / 180) };
 
   $('wheelG').setAttribute('transform', `translate(220,200) rotate(${(-delta).toFixed(2)})`);
+  $('wheelG').classList.toggle('slip', sat);
+  $('skid').innerHTML = sat
+    ? `<g transform="translate(220,200) rotate(${(-betaDeg).toFixed(1)})"><path d="M -64 -13 L -200 -4 L -200 4 L -64 13 Z" fill="rgba(248,113,113,0.16)"/><line x1="-70" y1="0" x2="-190" y2="0" stroke="rgba(248,113,113,0.45)" stroke-width="5" stroke-linecap="round" stroke-dasharray="14 10"/></g>`
+    : '';
   $('deltaLabel').textContent = `δ = ${delta}°` + (delta > 0 ? ' (поворот влево)' : delta < 0 ? ' (поворот вправо)' : ' (прямо)');
 
   const fxL = fx * K_WHEEL;

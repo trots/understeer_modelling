@@ -12,8 +12,6 @@
     --tire: #24303e; --wheel-stroke: #7dd3fc;
     --line: #3a4552; --wheel-inner: #3b4a5c; --circle-fill: #1d2632; --circle-stroke: #55657a;
     --proj: #475569;
-    --ok-bg: #12351f; --ok-border: #1f6b3a;
-    --bad-bg: #3a1518; --bad-border: #7a262b;
   }
   :root[data-theme="light"] {
     --bg: #f2f4f8; --panel: #ffffff; --border: #d4dae3; --text: #1c2430; --muted: #5b6675;
@@ -22,8 +20,6 @@
     --tire: #dde4ec; --wheel-stroke: #0284c7;
     --line: #b9c2ce; --wheel-inner: #c3ccd8; --circle-fill: #edf1f6; --circle-stroke: #9aa7b6;
     --proj: #9aa7b6;
-    --ok-bg: #e3f5e9; --ok-border: #9ed7b2;
-    --bad-bg: #fdeaea; --bad-border: #f0b4b8;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, sans-serif; }
@@ -47,16 +43,16 @@
   .ctl label { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
   .ctl input[type=range] { width: 100%; }
   .ctl select { width: 100%; background: var(--input); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 7px 8px; font-size: 14px; }
-  .chk { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 5px 0; }
+  .ctl .chk { display: flex; justify-content: flex-start; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 5px 0; }
   .chk input { width: 16px; height: 16px; accent-color: var(--green); }
   .readout { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; align-content: center; min-height: 76px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 14px; }
   .readout b { font-weight: 600; }
-  #verdict { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 15px; min-height: 72px; display: flex; align-items: center; }
   .sw.gr { background: var(--gray); }
   #wheelG .tire { fill: var(--tire); stroke: var(--wheel-stroke); transition: stroke .2s, filter .2s; }
   #wheelG.slip .tire { stroke: var(--red); filter: drop-shadow(0 0 7px rgba(248,113,113,.7)); }
-  #verdict.ok { background: var(--ok-bg); border: 1px solid var(--ok-border); color: var(--green); }
-  #verdict.bad { background: var(--bad-bg); border: 1px solid var(--bad-border); color: var(--red); }
+  #statusLabel { font-weight: 600; }
+  #statusLabel.ok { fill: var(--green); }
+  #statusLabel.bad { fill: var(--red); }
   footer { margin-top: 18px; color: var(--muted); font-size: 13px; }
 
   .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
@@ -121,7 +117,7 @@
           <line x1="-20" y1="-30" x2="-20" y2="30" class="win"/>
           <line x1="20" y1="-30" x2="20" y2="30" class="win"/>
         </g>
-        <text id="deltaLabel" x="220" y="330" class="txt" font-size="14" text-anchor="middle"></text>
+        <text id="statusLabel" x="220" y="330" class="txt" font-size="15" text-anchor="middle"></text>
         <g id="dynWheel"></g>
       </svg>
     </section>
@@ -181,8 +177,6 @@
     <div><span data-i18n="r_fyav">Fy (available):</span> <b id="rFyAvail">—</b></div>
     <div><span data-i18n="r_slip">Slip angle α:</span> <b id="rSlip">—</b></div>
   </div>
-
-  <div id="verdict" class="ok"></div>
 
   <footer id="fline"></footer>
 
@@ -252,15 +246,13 @@ const I18N = {
     r_slip: 'Slip angle α:',
     u_kn: ' kN',
     u_kmh: 'km/h',
-    d_left: 'turning left',
-    d_right: 'turning right',
-    d_straight: 'straight',
     a_accel: 'accel',
     a_brake: 'braking',
     f_line: 'v = {v} km/h · μ = {m} · limit μ·Fz ≈ {lim}',
-    v_ok: 'Within grip: the tire provides the required force, the car follows the intended path.',
-    v_lock: 'Wheel lockup: the tire is sliding, lateral force vanishes — the trajectory straightens.',
-    v_sat: 'Grip limit exceeded: tire saturated, available lateral force {fyAvail} vs demanded {fy}. Slip angle α = {slip}° — the direction of motion drifts toward straight, the car understeers.',
+    st_ok: 'Within grip',
+    st_lock: 'Wheel lockup',
+    st_spin: 'Wheelspin',
+    st_sat: 'Tire saturated — understeer',
     lang_title: 'Switch language',
     theme_title: 'Toggle theme'
   },
@@ -301,15 +293,13 @@ const I18N = {
     r_slip: 'Угол сноса α:',
     u_kn: ' кН',
     u_kmh: 'км/ч',
-    d_left: 'поворот влево',
-    d_right: 'поворот вправо',
-    d_straight: 'прямо',
     a_accel: 'разгон',
     a_brake: 'торможение',
     f_line: 'v = {v} км/ч · μ = {m} · предел μ·Fz ≈ {lim}',
-    v_ok: 'В пределах сцепления: шина обеспечивает требуемую силу, автомобиль следует заданной траектории.',
-    v_lock: 'Блокировка колёс: шина скользит, боковая сила исчезает — траектория распрямляется.',
-    v_sat: 'Превышение предела сцепления: шина насыщена, доступна боковая сила {fyAvail} при требуемой {fy}. Угол сноса α = {slip}° — направление движения отклоняется к прямой, автомобиль недоповорачивает.',
+    st_ok: 'В пределах сцепления',
+    st_lock: 'Блокировка колёс',
+    st_spin: 'Пробуксовка',
+    st_sat: 'Шина насыщена — снос',
     lang_title: 'Сменить язык',
     theme_title: 'Переключить тему'
   }
@@ -381,8 +371,17 @@ function compute() {
   $('skid').innerHTML = slide
     ? `<g transform="translate(220,200) rotate(${(-betaDeg).toFixed(1)})"><path d="M -64 -13 L -200 -4 L -200 4 L -64 13 Z" fill="rgba(248,113,113,0.16)"/><line x1="-70" y1="0" x2="-190" y2="0" stroke="rgba(248,113,113,0.45)" stroke-width="5" stroke-linecap="round" stroke-dasharray="14 10"/></g>`
     : '';
-  const dirKey = delta > 0 ? 'd_left' : delta < 0 ? 'd_right' : 'd_straight';
-  $('deltaLabel').textContent = `δ = ${delta}° (${t(dirKey)})`;
+  const stEl = $('statusLabel');
+  if (locked) {
+    stEl.textContent = fx < 0 ? t('st_lock') : t('st_spin');
+    stEl.setAttribute('class', 'bad');
+  } else if (sat) {
+    stEl.textContent = t('st_sat');
+    stEl.setAttribute('class', 'bad');
+  } else {
+    stEl.textContent = t('st_ok');
+    stEl.setAttribute('class', 'ok');
+  }
 
   const fxL = fx * K_WHEEL;
   const fyL = Math.min(fy * K_WHEEL, 175);
@@ -417,18 +416,6 @@ function compute() {
   $('rSlip').textContent = slip.toFixed(1) + '°';
   $('rSlip').style.color = slip > 0.05 ? 'var(--red)' : '';
   $('fline').textContent = t('f_line').replace('{v}', vKmh).replace('{m}', mu.toFixed(1)).replace('{lim}', kn(LIMIT));
-
-  const v = $('verdict');
-  if (locked) {
-    v.className = 'bad';
-    v.textContent = t('v_lock');
-  } else if (sat) {
-    v.className = 'bad';
-    v.textContent = t('v_sat').replace('{fyAvail}', kn(fyAvail)).replace('{fy}', kn(fy)).replace('{slip}', slip.toFixed(1));
-  } else {
-    v.className = 'ok';
-    v.textContent = t('v_ok');
-  }
 }
 
 ['gas', 'brake', 'steer', 'speed', 'surface', 'abs'].forEach(id => $(id).addEventListener('input', compute));

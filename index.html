@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Снос передней оси — круг сцепления</title>
+<title data-i18n="title">Front-Axle Slip Modelling</title>
 <style>
   :root {
     --bg: #101318; --panel: #1a1f27; --border: #2a313c; --text: #d7dde6; --muted: #8a94a3;
@@ -60,8 +60,10 @@
   footer { margin-top: 18px; color: var(--muted); font-size: 13px; }
 
   .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-  .theme-btn { flex: none; width: 40px; height: 40px; margin-top: 2px; display: grid; place-items: center; background: var(--panel); border: 1px solid var(--border); border-radius: 50%; color: var(--text); cursor: pointer; transition: border-color .2s, color .2s; }
+  .head-btns { display: flex; gap: 8px; flex: none; margin-top: 2px; }
+  .theme-btn { width: 40px; height: 40px; display: grid; place-items: center; background: var(--panel); border: 1px solid var(--border); border-radius: 50%; color: var(--text); cursor: pointer; transition: border-color .2s, color .2s; }
   .theme-btn:hover { border-color: var(--muted); }
+  .lang-btn { font-weight: 700; font-size: 13px; letter-spacing: .5px; }
   :root[data-theme="light"] .ic-sun { display: none; }
   :root:not([data-theme="light"]) .ic-moon { display: none; }
 
@@ -94,21 +96,24 @@
 <main>
   <div class="head">
     <div>
-      <h1>Моделирование сноса передней оси</h1>
-      <p class="sub">Как разгон или торможение в повороте влияет на сцепление передних колёс</p>
+      <h1 data-i18n="h1">Front-Axle Slip Modelling</h1>
+      <p class="sub" data-i18n="sub">How acceleration or braking in a turn affects front tire grip</p>
     </div>
-    <button id="themeBtn" class="theme-btn" title="Переключить тему" aria-label="Переключить тему">
+    <div class="head-btns">
+      <button id="langBtn" class="theme-btn lang-btn" title="Switch language">RU</button>
+      <button id="themeBtn" class="theme-btn" title="Переключить тему" aria-label="Переключить тему">
       <svg class="ic-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2.3M12 18.9v2.3M2.8 12h2.3M18.9 12h2.3M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg>
       <svg class="ic-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 13.8A8.4 8.4 0 1 1 10.2 3.6a7 7 0 0 0 10.2 10.2z"/></svg>
     </button>
+    </div>
   </div>
 
   <div class="panels">
     <section class="panel">
-      <h2>Колесо (вид сверху)</h2>
+      <h2 data-i18n="h2_wheel">Wheel (top view)</h2>
       <svg viewBox="0 0 440 400">
         <line x1="30" y1="200" x2="410" y2="200" class="axline" stroke-dasharray="5 5"/>
-        <text x="408" y="190" class="mut" font-size="11" text-anchor="end">прямо</text>
+        <text x="408" y="190" class="mut" font-size="11" text-anchor="end" data-i18n="straight">straight</text>
         <g id="skid"></g>
         <g id="wheelG" transform="translate(220,200) rotate(-6)">
           <rect class="tire" x="-62" y="-30" width="124" height="60" rx="14" stroke-width="2"/>
@@ -122,15 +127,15 @@
     </section>
 
     <section class="panel">
-      <h2>Круг сцепления</h2>
+      <h2 data-i18n="h2_circle">Friction circle</h2>
       <svg viewBox="0 0 440 400">
         <line x1="220" y1="30" x2="220" y2="370" class="axline"/>
         <line x1="40" y1="200" x2="400" y2="200" class="axline"/>
         <circle cx="220" cy="200" r="140" class="limc" stroke-width="2"/>
-        <text x="400" y="190" class="mut" font-size="12" text-anchor="end">Fx — разгон →</text>
-        <text x="42" y="190" class="mut" font-size="12">← тормоз — Fx</text>
-        <text x="228" y="46" class="mut" font-size="12">Fy — поворот влево</text>
-        <text x="228" y="366" class="mut" font-size="12">Fy — поворот вправо</text>
+        <text x="400" y="190" class="mut" font-size="12" text-anchor="end" data-i18n="ax_fx_r">Fx — accel →</text>
+        <text x="42" y="190" class="mut" font-size="12" data-i18n="ax_fx_l">← brake — Fx</text>
+        <text x="228" y="46" class="mut" font-size="12" data-i18n="ax_fy_t">Fy — turn left</text>
+        <text x="228" y="366" class="mut" font-size="12" data-i18n="ax_fy_b">Fy — turn right</text>
         <g id="dynCircle"></g>
       </svg>
     </section>
@@ -138,43 +143,43 @@
 
   <div class="controls">
     <div class="ctl">
-      <label>Газ <span id="gasV">0%</span></label>
+      <label><span data-i18n="c_gas">Throttle</span> <span id="gasV">0%</span></label>
       <input type="range" id="gas" min="0" max="100" step="1" value="0">
     </div>
     <div class="ctl">
-      <label>Тормоз <span id="brakeV">0%</span></label>
+      <label><span data-i18n="c_brake">Brake</span> <span id="brakeV">0%</span></label>
       <input type="range" id="brake" min="0" max="100" step="1" value="0">
     </div>
     <div class="ctl">
-      <label>Угол поворота колёс δ <span id="steerV">6°</span></label>
+      <label><span data-i18n="c_steer">Steering angle δ</span> <span id="steerV">6°</span></label>
       <input type="range" id="steer" min="-30" max="30" step="0.5" value="6">
     </div>
     <div class="ctl">
-      <label>Скорость <span id="speedV">50 км/ч</span></label>
+      <label><span data-i18n="c_speed">Speed</span> <span id="speedV">50 km/h</span></label>
       <input type="range" id="speed" min="20" max="100" step="5" value="50">
     </div>
     <div class="ctl">
-      <label>Поверхность</label>
+      <label data-i18n="c_surface">Surface</label>
       <select id="surface">
-        <option value="1.0" selected>Сухой асфальт (μ = 1,0)</option>
-        <option value="0.6">Мокрая дорога (μ = 0,6)</option>
-        <option value="0.2">Лёд (μ = 0,2)</option>
+        <option value="1.0" selected data-i18n="s_dry">Dry asphalt (μ = 1.0)</option>
+        <option value="0.6" data-i18n="s_wet">Wet road (μ = 0.6)</option>
+        <option value="0.2" data-i18n="s_ice">Ice (μ = 0.2)</option>
       </select>
     </div>
     <div class="ctl">
-      <label class="chk"><input type="checkbox" id="abs" checked> ABS (антиблокировочная система)</label>
+      <label class="chk"><input type="checkbox" id="abs" checked> <span data-i18n="c_abs">ABS (anti-lock braking system)</span></label>
     </div>
   </div>
 
   <div class="readout">
-    <div>Fx (газ/тормоз): <b id="rFx">—</b></div>
-    <div>Fy (поворот): <b id="rFy">—</b></div>
-    <div>Результирующая: <b id="rF">—</b></div>
-    <div>Предел μ·Fz: <b id="rLim">—</b></div>
-    <div>Fz (передняя ось): <b id="rFz">—</b></div>
-    <div>Использование сцепления: <b id="rUtil">—</b></div>
-    <div>Fy (доступная): <b id="rFyAvail">—</b></div>
-    <div>Угол сноса α: <b id="rSlip">—</b></div>
+    <div><span data-i18n="r_fx">Fx (throttle/brake):</span> <b id="rFx">—</b></div>
+    <div><span data-i18n="r_fy">Fy (cornering):</span> <b id="rFy">—</b></div>
+    <div><span data-i18n="r_f">Resultant:</span> <b id="rF">—</b></div>
+    <div><span data-i18n="r_lim">Limit μ·Fz:</span> <b id="rLim">—</b></div>
+    <div><span data-i18n="r_fz">Fz (front axle):</span> <b id="rFz">—</b></div>
+    <div><span data-i18n="r_util">Grip utilization:</span> <b id="rUtil">—</b></div>
+    <div><span data-i18n="r_fyav">Fy (available):</span> <b id="rFyAvail">—</b></div>
+    <div><span data-i18n="r_slip">Slip angle α:</span> <b id="rSlip">—</b></div>
   </div>
 
   <div id="verdict" class="ok"></div>
@@ -182,16 +187,16 @@
   <footer id="fline"></footer>
 
   <details class="legend">
-    <summary>Обозначения и параметры модели</summary>
+    <summary data-i18n="leg_sum">Legend and model parameters</summary>
     <div class="legend-body">
       <p>
-        <span class="sw o"></span>Fx — продольная сила (газ/тормоз)
-        <span class="sw c"></span>Fy — боковая сила (поворот)
-        <span class="sw g"></span>результирующая в пределах сцепления и направление движения
-        <span class="sw r"></span>насыщение шины (превышение предела сцепления)
-        <span class="sw gr"></span>направление колёс
+        <span class="sw o"></span><span data-i18n="leg_fx">Fx — longitudinal force (throttle/brake)</span>
+        <span class="sw c"></span><span data-i18n="leg_fy">Fy — lateral force (cornering)</span>
+        <span class="sw g"></span><span data-i18n="leg_res">resultant within grip and direction of motion</span>
+        <span class="sw r"></span><span data-i18n="leg_sat">tire saturation (grip limit exceeded)</span>
+        <span class="sw gr"></span><span data-i18n="leg_head">wheel heading</span>
       </p>
-      <p>m = 1400 кг · база L = 2,7 м · высота центра тяжести h = 0,5 м · нагрузка на переднюю ось ≈ 60% массы (Fz ≈ 8,2 кН стат.) · предел сцепления μ·Fz_дин · торможение 70% на переднюю ось · передний привод · радиус поворота R = L / tan δ · при ABS выкл: блокировка при |Fx| &gt; 0.7·μ·Fz_дин, боковая сила скользящего колеса = 0</p>
+      <p data-i18n="params">m = 1400 kg · wheelbase L = 2.7 m · CG height h = 0.5 m · front axle load ≈ 60% of weight (Fz ≈ 8.2 kN static) · grip limit μ·Fz_dyn · braking 70% on front axle · front-wheel drive · turn radius R = L / tan δ · with ABS off: lockup when |Fx| > 0.7·μ·Fz_dyn, lateral force of a sliding tire = 0</p>
     </div>
   </details>
 </main>
@@ -208,7 +213,122 @@ const FZ = SHARE * MASS * G;
 const CX = 220, CY = 200;
 
 const $ = id => document.getElementById(id);
-const kn = n => (n / 1000).toFixed(2) + ' кН';
+
+const I18N = {
+  en: {
+    title: 'Front-Axle Slip Modelling',
+    h1: 'Front-Axle Slip Modelling',
+    sub: 'How acceleration or braking in a turn affects front tire grip',
+    h2_wheel: 'Wheel (top view)',
+    h2_circle: 'Friction circle',
+    straight: 'straight',
+    ax_fx_r: 'Fx — accel →',
+    ax_fx_l: '← brake — Fx',
+    ax_fy_t: 'Fy — turn left',
+    ax_fy_b: 'Fy — turn right',
+    leg_sum: 'Legend and model parameters',
+    leg_fx: 'Fx — longitudinal force (throttle/brake)',
+    leg_fy: 'Fy — lateral force (cornering)',
+    leg_res: 'resultant within grip and direction of motion',
+    leg_sat: 'tire saturation (grip limit exceeded)',
+    leg_head: 'wheel heading',
+    params: 'm = 1400 kg · wheelbase L = 2.7 m · CG height h = 0.5 m · front axle load ≈ 60% of weight (Fz ≈ 8.2 kN static) · grip limit μ·Fz_dyn · braking 70% on front axle · front-wheel drive · turn radius R = L / tan δ · with ABS off: lockup when |Fx| > 0.7·μ·Fz_dyn, lateral force of a sliding tire = 0',
+    c_gas: 'Throttle',
+    c_brake: 'Brake',
+    c_steer: 'Steering angle δ',
+    c_speed: 'Speed',
+    c_surface: 'Surface',
+    c_abs: 'ABS (anti-lock braking system)',
+    s_dry: 'Dry asphalt (μ = 1.0)',
+    s_wet: 'Wet road (μ = 0.6)',
+    s_ice: 'Ice (μ = 0.2)',
+    r_fx: 'Fx (throttle/brake):',
+    r_fy: 'Fy (cornering):',
+    r_f: 'Resultant:',
+    r_lim: 'Limit μ·Fz:',
+    r_fz: 'Fz (front axle):',
+    r_util: 'Grip utilization:',
+    r_fyav: 'Fy (available):',
+    r_slip: 'Slip angle α:',
+    u_kn: ' kN',
+    u_kmh: 'km/h',
+    d_left: 'turning left',
+    d_right: 'turning right',
+    d_straight: 'straight',
+    a_accel: 'accel',
+    a_brake: 'braking',
+    f_line: 'v = {v} km/h · μ = {m} · limit μ·Fz ≈ {lim}',
+    v_ok: 'Within grip: the tire provides the required force, the car follows the intended path.',
+    v_lock: 'Wheel lockup: the tire is sliding, lateral force vanishes — the trajectory straightens.',
+    v_sat: 'Grip limit exceeded: tire saturated, available lateral force {fyAvail} vs demanded {fy}. Slip angle α = {slip}° — the direction of motion drifts toward straight, the car understeers.',
+    lang_title: 'Switch language',
+    theme_title: 'Toggle theme'
+  },
+  ru: {
+    title: 'Моделирование сноса передней оси',
+    h1: 'Моделирование сноса передней оси',
+    sub: 'Как разгон или торможение в повороте влияет на сцепление передних колёс',
+    h2_wheel: 'Колесо (вид сверху)',
+    h2_circle: 'Круг сцепления',
+    straight: 'прямо',
+    ax_fx_r: 'Fx — разгон →',
+    ax_fx_l: '← тормоз — Fx',
+    ax_fy_t: 'Fy — поворот влево',
+    ax_fy_b: 'Fy — поворот вправо',
+    leg_sum: 'Обозначения и параметры модели',
+    leg_fx: 'Fx — продольная сила (газ/тормоз)',
+    leg_fy: 'Fy — боковая сила (поворот)',
+    leg_res: 'результирующая в пределах сцепления и направление движения',
+    leg_sat: 'насыщение шины (превышение предела сцепления)',
+    leg_head: 'направление колёс',
+    params: 'm = 1400 кг · база L = 2,7 м · высота центра тяжести h = 0,5 м · нагрузка на переднюю ось ≈ 60% массы (Fz ≈ 8,2 кН стат.) · предел сцепления μ·Fz_дин · торможение 70% на переднюю ось · передний привод · радиус поворота R = L / tan δ · при ABS выкл: блокировка при |Fx| > 0.7·μ·Fz_дин, боковая сила скользящего колеса = 0',
+    c_gas: 'Газ',
+    c_brake: 'Тормоз',
+    c_steer: 'Угол поворота колёс δ',
+    c_speed: 'Скорость',
+    c_surface: 'Поверхность',
+    c_abs: 'ABS (антиблокировочная система)',
+    s_dry: 'Сухой асфальт (μ = 1,0)',
+    s_wet: 'Мокрая дорога (μ = 0,6)',
+    s_ice: 'Лёд (μ = 0,2)',
+    r_fx: 'Fx (газ/тормоз):',
+    r_fy: 'Fy (поворот):',
+    r_f: 'Результирующая:',
+    r_lim: 'Предел μ·Fz:',
+    r_fz: 'Fz (передняя ось):',
+    r_util: 'Использование сцепления:',
+    r_fyav: 'Fy (доступная):',
+    r_slip: 'Угол сноса α:',
+    u_kn: ' кН',
+    u_kmh: 'км/ч',
+    d_left: 'поворот влево',
+    d_right: 'поворот вправо',
+    d_straight: 'прямо',
+    a_accel: 'разгон',
+    a_brake: 'торможение',
+    f_line: 'v = {v} км/ч · μ = {m} · предел μ·Fz ≈ {lim}',
+    v_ok: 'В пределах сцепления: шина обеспечивает требуемую силу, автомобиль следует заданной траектории.',
+    v_lock: 'Блокировка колёс: шина скользит, боковая сила исчезает — траектория распрямляется.',
+    v_sat: 'Превышение предела сцепления: шина насыщена, доступна боковая сила {fyAvail} при требуемой {fy}. Угол сноса α = {slip}° — направление движения отклоняется к прямой, автомобиль недоповорачивает.',
+    lang_title: 'Сменить язык',
+    theme_title: 'Переключить тему'
+  }
+};
+let lang = 'en';
+try { lang = localStorage.getItem('lang') || 'en'; } catch (e) {}
+if (!I18N[lang]) lang = 'en';
+const t = key => I18N[lang][key] || key;
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  const lb = $('langBtn');
+  if (lb) { lb.textContent = lang === 'ru' ? 'EN' : 'RU'; lb.title = t('lang_title'); }
+  const tb = $('themeBtn');
+  if (tb) { tb.title = t('theme_title'); tb.setAttribute('aria-label', t('theme_title')); }
+  compute();
+}
+
+const kn = n => (n / 1000).toFixed(2) + t('u_kn');
 const f1 = n => n.toFixed(1);
 
 function ln(x1, y1, x2, y2, cls, w, mk) {
@@ -225,7 +345,7 @@ function compute() {
   $('gasV').textContent = gas + '%';
   $('brakeV').textContent = brake + '%';
   $('steerV').textContent = delta + '°';
-  $('speedV').textContent = vKmh + ' км/ч';
+  $('speedV').textContent = vKmh + ' ' + t('u_kmh');
 
   const fxReq = (gas - brake) / 100 * LIMIT_ST;
   const ax = -fxReq / ((fxReq < 0 ? BIAS : 1) * MASS);
@@ -261,7 +381,8 @@ function compute() {
   $('skid').innerHTML = slide
     ? `<g transform="translate(220,200) rotate(${(-betaDeg).toFixed(1)})"><path d="M -64 -13 L -200 -4 L -200 4 L -64 13 Z" fill="rgba(248,113,113,0.16)"/><line x1="-70" y1="0" x2="-190" y2="0" stroke="rgba(248,113,113,0.45)" stroke-width="5" stroke-linecap="round" stroke-dasharray="14 10"/></g>`
     : '';
-  $('deltaLabel').textContent = `δ = ${delta}°` + (delta > 0 ? ' (поворот влево)' : delta < 0 ? ' (поворот вправо)' : ' (прямо)');
+  const dirKey = delta > 0 ? 'd_left' : delta < 0 ? 'd_right' : 'd_straight';
+  $('deltaLabel').textContent = `δ = ${delta}° (${t(dirKey)})`;
 
   const fxL = fx * K_WHEEL;
   const fyL = Math.min(fy * K_WHEEL, 175);
@@ -286,7 +407,7 @@ function compute() {
     dc += `<circle cx="${f1(CX + fxP)}" cy="${f1(CY - fyP)}" r="5" class="dem"/>`;
   $('dynCircle').innerHTML = dc;
 
-  $('rFx').textContent = kn(fx) + (fx > 50 ? ' (разгон)' : fx < -50 ? ' (торможение)' : '');
+  $('rFx').textContent = kn(fx) + (fx > 50 ? ` (${t('a_accel')})` : fx < -50 ? ` (${t('a_brake')})` : '');
   $('rFy').textContent = kn(fy);
   $('rF').textContent = kn(Math.hypot(fx, fy));
   $('rLim').textContent = kn(LIMIT);
@@ -295,23 +416,23 @@ function compute() {
   $('rFyAvail').textContent = slide ? kn(fyAvail) : '—';
   $('rSlip').textContent = slip.toFixed(1) + '°';
   $('rSlip').style.color = slip > 0.05 ? 'var(--red)' : '';
-  $('fline').textContent = `v = ${vKmh} км/ч · μ = ${mu.toFixed(1)} · предел μ·Fz ≈ ${kn(LIMIT)}`;
+  $('fline').textContent = t('f_line').replace('{v}', vKmh).replace('{m}', mu.toFixed(1)).replace('{lim}', kn(LIMIT));
 
   const v = $('verdict');
   if (locked) {
     v.className = 'bad';
-    v.textContent = 'Блокировка колёс: шина скользит, боковая сила исчезает — траектория распрямляется.';
+    v.textContent = t('v_lock');
   } else if (sat) {
     v.className = 'bad';
-    v.textContent = `Превышение предела сцепления: шина насыщена, доступна боковая сила ${kn(fyAvail)} при требуемой ${kn(fy)}. Угол сноса α = ${slip.toFixed(1)}° — направление движения отклоняется к прямой, автомобиль недоповорачивает.`;
+    v.textContent = t('v_sat').replace('{fyAvail}', kn(fyAvail)).replace('{fy}', kn(fy)).replace('{slip}', slip.toFixed(1));
   } else {
     v.className = 'ok';
-    v.textContent = 'В пределах сцепления: шина обеспечивает требуемую силу, автомобиль следует заданной траектории.';
+    v.textContent = t('v_ok');
   }
 }
 
 ['gas', 'brake', 'steer', 'speed', 'surface', 'abs'].forEach(id => $(id).addEventListener('input', compute));
-compute();
+applyLang();
 
 let savedTheme = null;
 try { savedTheme = localStorage.getItem('theme'); } catch (e) {}
@@ -321,6 +442,11 @@ $('themeBtn').addEventListener('click', () => {
   if (light) { delete document.documentElement.dataset.theme; }
   else { document.documentElement.dataset.theme = 'light'; }
   try { localStorage.setItem('theme', light ? 'dark' : 'light'); } catch (e) {}
+});
+$('langBtn').addEventListener('click', () => {
+  lang = lang === 'ru' ? 'en' : 'ru';
+  try { localStorage.setItem('lang', lang); } catch (e) {}
+  applyLang();
 });
 </script>
 </body>

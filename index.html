@@ -8,6 +8,22 @@
   :root {
     --bg: #101318; --panel: #1a1f27; --border: #2a313c; --text: #d7dde6; --muted: #8a94a3;
     --green: #4ade80; --red: #f87171; --orange: #fb923c; --cyan: #38bdf8; --gray: #94a3b8;
+    --input: #141a22;
+    --tire: #24303e; --wheel-stroke: #7dd3fc;
+    --line: #3a4552; --wheel-inner: #3b4a5c; --circle-fill: #1d2632; --circle-stroke: #55657a;
+    --proj: #475569;
+    --ok-bg: #12351f; --ok-border: #1f6b3a;
+    --bad-bg: #3a1518; --bad-border: #7a262b;
+  }
+  :root[data-theme="light"] {
+    --bg: #f2f4f8; --panel: #ffffff; --border: #d4dae3; --text: #1c2430; --muted: #5b6675;
+    --green: #16a34a; --red: #dc2626; --orange: #ea580c; --cyan: #0284c7; --gray: #64748b;
+    --input: #edf1f6;
+    --tire: #dde4ec; --wheel-stroke: #0284c7;
+    --line: #b9c2ce; --wheel-inner: #c3ccd8; --circle-fill: #edf1f6; --circle-stroke: #9aa7b6;
+    --proj: #9aa7b6;
+    --ok-bg: #e3f5e9; --ok-border: #9ed7b2;
+    --bad-bg: #fdeaea; --bad-border: #f0b4b8;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, sans-serif; }
@@ -30,49 +46,77 @@
   .ctl { flex: 1 1 240px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
   .ctl label { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
   .ctl input[type=range] { width: 100%; }
-  .ctl select { width: 100%; background: #141a22; color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 7px 8px; font-size: 14px; }
+  .ctl select { width: 100%; background: var(--input); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 7px 8px; font-size: 14px; }
   .chk { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 5px 0; }
-  .chk input { width: 16px; height: 16px; accent-color: #4ade80; }
+  .chk input { width: 16px; height: 16px; accent-color: var(--green); }
   .readout { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; align-content: center; min-height: 76px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 14px; }
   .readout b { font-weight: 600; }
   #verdict { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 15px; min-height: 72px; display: flex; align-items: center; }
   .sw.gr { background: var(--gray); }
-  #wheelG .tire { stroke: #7dd3fc; transition: stroke .2s, filter .2s; }
-  #wheelG.slip .tire { stroke: #f87171; filter: drop-shadow(0 0 7px rgba(248,113,113,.7)); }
-  #verdict.ok { background: #12351f; border: 1px solid #1f6b3a; color: var(--green); }
-  #verdict.bad { background: #3a1518; border: 1px solid #7a262b; color: var(--red); }
+  #wheelG .tire { fill: var(--tire); stroke: var(--wheel-stroke); transition: stroke .2s, filter .2s; }
+  #wheelG.slip .tire { stroke: var(--red); filter: drop-shadow(0 0 7px rgba(248,113,113,.7)); }
+  #verdict.ok { background: var(--ok-bg); border: 1px solid var(--ok-border); color: var(--green); }
+  #verdict.bad { background: var(--bad-bg); border: 1px solid var(--bad-border); color: var(--red); }
   footer { margin-top: 18px; color: var(--muted); font-size: 13px; }
+
+  .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+  .theme-btn { flex: none; width: 40px; height: 40px; margin-top: 2px; display: grid; place-items: center; background: var(--panel); border: 1px solid var(--border); border-radius: 50%; color: var(--text); cursor: pointer; transition: border-color .2s, color .2s; }
+  .theme-btn:hover { border-color: var(--muted); }
+  :root[data-theme="light"] .ic-sun { display: none; }
+  :root:not([data-theme="light"]) .ic-moon { display: none; }
+
+  .axline { stroke: var(--line); }
+  .win { stroke: var(--wheel-inner); }
+  .limc { fill: var(--circle-fill); stroke: var(--circle-stroke); }
+  .mut { fill: var(--muted); }
+  .txt { fill: var(--text); }
+  .c-g { stroke: var(--green); } .c-r { stroke: var(--red); } .c-o { stroke: var(--orange); }
+  .c-c { stroke: var(--cyan); } .c-gr { stroke: var(--gray); } .c-mut { stroke: var(--proj); }
+  .dem { fill: none; stroke: var(--red); stroke-width: 2; }
+  #ah-green path { fill: var(--green); }
+  #ah-red path { fill: var(--red); }
+  #ah-orange path { fill: var(--orange); }
+  #ah-cyan path { fill: var(--cyan); }
+  #ah-gray path { fill: var(--gray); }
 </style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute">
   <defs>
-    <marker id="ah-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#4ade80"/></marker>
-    <marker id="ah-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#f87171"/></marker>
-    <marker id="ah-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#fb923c"/></marker>
-    <marker id="ah-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#38bdf8"/></marker>
-    <marker id="ah-gray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker>
+    <marker id="ah-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="11" markerHeight="11" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="ah-gray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z"/></marker>
   </defs>
 </svg>
 
 <main>
-  <h1>Моделирование сноса передней оси</h1>
-  <p class="sub">Как разгон или торможение в повороте влияет на сцепление передних колёс</p>
+  <div class="head">
+    <div>
+      <h1>Моделирование сноса передней оси</h1>
+      <p class="sub">Как разгон или торможение в повороте влияет на сцепление передних колёс</p>
+    </div>
+    <button id="themeBtn" class="theme-btn" title="Переключить тему" aria-label="Переключить тему">
+      <svg class="ic-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2.3M12 18.9v2.3M2.8 12h2.3M18.9 12h2.3M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg>
+      <svg class="ic-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 13.8A8.4 8.4 0 1 1 10.2 3.6a7 7 0 0 0 10.2 10.2z"/></svg>
+    </button>
+  </div>
 
   <div class="panels">
     <section class="panel">
       <h2>Колесо (вид сверху)</h2>
       <svg viewBox="0 0 440 400">
-        <line x1="30" y1="200" x2="410" y2="200" stroke="#3a4552" stroke-dasharray="5 5"/>
-        <text x="408" y="190" fill="#8a94a3" font-size="11" text-anchor="end">прямо</text>
+        <line x1="30" y1="200" x2="410" y2="200" class="axline" stroke-dasharray="5 5"/>
+        <text x="408" y="190" class="mut" font-size="11" text-anchor="end">прямо</text>
         <g id="skid"></g>
         <g id="wheelG" transform="translate(220,200) rotate(-6)">
-          <rect class="tire" x="-62" y="-30" width="124" height="60" rx="14" fill="#24303e" stroke="#7dd3fc" stroke-width="2"/>
-          <rect x="-40" y="-18" width="80" height="36" rx="8" fill="none" stroke="#3b4a5c"/>
-          <line x1="-20" y1="-30" x2="-20" y2="30" stroke="#3b4a5c"/>
-          <line x1="20" y1="-30" x2="20" y2="30" stroke="#3b4a5c"/>
+          <rect class="tire" x="-62" y="-30" width="124" height="60" rx="14" stroke-width="2"/>
+          <rect x="-40" y="-18" width="80" height="36" rx="8" fill="none" class="win"/>
+          <line x1="-20" y1="-30" x2="-20" y2="30" class="win"/>
+          <line x1="20" y1="-30" x2="20" y2="30" class="win"/>
         </g>
-        <text id="deltaLabel" x="220" y="330" fill="#d7dde6" font-size="14" text-anchor="middle"></text>
+        <text id="deltaLabel" x="220" y="330" class="txt" font-size="14" text-anchor="middle"></text>
         <g id="dynWheel"></g>
       </svg>
     </section>
@@ -80,13 +124,13 @@
     <section class="panel">
       <h2>Круг сцепления</h2>
       <svg viewBox="0 0 440 400">
-        <line x1="220" y1="30" x2="220" y2="370" stroke="#3a4552"/>
-        <line x1="40" y1="200" x2="400" y2="200" stroke="#3a4552"/>
-        <circle cx="220" cy="200" r="140" fill="#1d2632" stroke="#55657a" stroke-width="2"/>
-        <text x="400" y="190" fill="#8a94a3" font-size="12" text-anchor="end">Fx — разгон →</text>
-        <text x="42" y="190" fill="#8a94a3" font-size="12">← тормоз — Fx</text>
-        <text x="228" y="46" fill="#8a94a3" font-size="12">Fy — поворот влево</text>
-        <text x="228" y="366" fill="#8a94a3" font-size="12">Fy — поворот вправо</text>
+        <line x1="220" y1="30" x2="220" y2="370" class="axline"/>
+        <line x1="40" y1="200" x2="400" y2="200" class="axline"/>
+        <circle cx="220" cy="200" r="140" class="limc" stroke-width="2"/>
+        <text x="400" y="190" class="mut" font-size="12" text-anchor="end">Fx — разгон →</text>
+        <text x="42" y="190" class="mut" font-size="12">← тормоз — Fx</text>
+        <text x="228" y="46" class="mut" font-size="12">Fy — поворот влево</text>
+        <text x="228" y="366" class="mut" font-size="12">Fy — поворот вправо</text>
         <g id="dynCircle"></g>
       </svg>
     </section>
@@ -167,8 +211,8 @@ const $ = id => document.getElementById(id);
 const kn = n => (n / 1000).toFixed(2) + ' кН';
 const f1 = n => n.toFixed(1);
 
-function ln(x1, y1, x2, y2, stroke, w, mk) {
-  return `<line x1="${f1(x1)}" y1="${f1(y1)}" x2="${f1(x2)}" y2="${f1(y2)}" stroke="${stroke}" stroke-width="${w}" marker-end="url(#${mk})"/>`;
+function ln(x1, y1, x2, y2, cls, w, mk) {
+  return `<line x1="${f1(x1)}" y1="${f1(y1)}" x2="${f1(x2)}" y2="${f1(y2)}" class="${cls}" stroke-width="${w}" marker-end="url(#${mk})"/>`;
 }
 
 function compute() {
@@ -221,10 +265,10 @@ function compute() {
 
   const fxL = fx * K_WHEEL;
   const fyL = Math.min(fy * K_WHEEL, 175);
-  let dw = ln(CX + vb.x * 66, CY + vb.y * 66, CX + vb.x * 206, CY + vb.y * 206, '#4ade80', 3.5, 'ah-green');
-  dw += ln(CX + h.x * 66, CY + h.y * 66, CX + h.x * 176, CY + h.y * 176, '#94a3b8', 2, 'ah-gray');
-  if (Math.abs(fxL) > 1) dw += ln(CX, CY, CX + h.x * fxL, CY + h.y * fxL, '#fb923c', 4, 'ah-orange');
-  if (fyL > 1) dw += ln(CX, CY, CX + n.x * fyL, CY + n.y * fyL, '#38bdf8', 4, 'ah-cyan');
+  let dw = ln(CX + vb.x * 66, CY + vb.y * 66, CX + vb.x * 206, CY + vb.y * 206, 'c-g', 3.5, 'ah-green');
+  dw += ln(CX + h.x * 66, CY + h.y * 66, CX + h.x * 176, CY + h.y * 176, 'c-gr', 2, 'ah-gray');
+  if (Math.abs(fxL) > 1) dw += ln(CX, CY, CX + h.x * fxL, CY + h.y * fxL, 'c-o', 4, 'ah-orange');
+  if (fyL > 1) dw += ln(CX, CY, CX + n.x * fyL, CY + n.y * fyL, 'c-c', 4, 'ah-cyan');
   $('dynWheel').innerHTML = dw;
 
   const fxP = Math.max(-LIMIT, Math.min(LIMIT, fx)) * K_CIRCLE;
@@ -233,13 +277,13 @@ function compute() {
   const s = sat ? 1 / util : 1;
   const resX = fx * K_CIRCLE * s, resY = fyS * K_CIRCLE * s;
   let dc = '';
-  if (Math.abs(fxP) > 1) dc += ln(CX, CY, CX + fxP, CY, '#fb923c', 2.5, 'ah-orange');
-  if (Math.abs(fyP) > 1) dc += ln(CX, CY, CX, CY - fyP, '#38bdf8', 2.5, 'ah-cyan');
+  if (Math.abs(fxP) > 1) dc += ln(CX, CY, CX + fxP, CY, 'c-o', 2.5, 'ah-orange');
+  if (Math.abs(fyP) > 1) dc += ln(CX, CY, CX, CY - fyP, 'c-c', 2.5, 'ah-cyan');
   if (Math.abs(fxP) > 1 && Math.abs(fyP) > 1)
-    dc += `<path d="M ${f1(CX + fxP)} ${CY} L ${f1(CX + fxP)} ${f1(CY - fyP)} L ${CX} ${f1(CY - fyP)}" stroke="#475569" fill="none" stroke-dasharray="4 4"/>`;
-  dc += ln(CX, CY, CX + resX, CY - resY, slide ? '#f87171' : '#4ade80', 3.5, slide ? 'ah-red' : 'ah-green');
+    dc += `<path d="M ${f1(CX + fxP)} ${CY} L ${f1(CX + fxP)} ${f1(CY - fyP)} L ${CX} ${f1(CY - fyP)}" class="c-mut" fill="none" stroke-dasharray="4 4"/>`;
+  dc += ln(CX, CY, CX + resX, CY - resY, slide ? 'c-r' : 'c-g', 3.5, slide ? 'ah-red' : 'ah-green');
   if (slide)
-    dc += `<circle cx="${f1(CX + fxP)}" cy="${f1(CY - fyP)}" r="5" fill="none" stroke="#f87171" stroke-width="2"/>`;
+    dc += `<circle cx="${f1(CX + fxP)}" cy="${f1(CY - fyP)}" r="5" class="dem"/>`;
   $('dynCircle').innerHTML = dc;
 
   $('rFx').textContent = kn(fx) + (fx > 50 ? ' (разгон)' : fx < -50 ? ' (торможение)' : '');
@@ -250,7 +294,7 @@ function compute() {
   $('rUtil').textContent = (util * 100).toFixed(0) + '%';
   $('rFyAvail').textContent = slide ? kn(fyAvail) : '—';
   $('rSlip').textContent = slip.toFixed(1) + '°';
-  $('rSlip').style.color = slip > 0.05 ? '#f87171' : '';
+  $('rSlip').style.color = slip > 0.05 ? 'var(--red)' : '';
   $('fline').textContent = `v = ${vKmh} км/ч · μ = ${mu.toFixed(1)} · предел μ·Fz ≈ ${kn(LIMIT)}`;
 
   const v = $('verdict');
@@ -268,6 +312,16 @@ function compute() {
 
 ['gas', 'brake', 'steer', 'speed', 'surface', 'abs'].forEach(id => $(id).addEventListener('input', compute));
 compute();
+
+let savedTheme = null;
+try { savedTheme = localStorage.getItem('theme'); } catch (e) {}
+if (savedTheme === 'light') document.documentElement.dataset.theme = 'light';
+$('themeBtn').addEventListener('click', () => {
+  const light = document.documentElement.dataset.theme === 'light';
+  if (light) { delete document.documentElement.dataset.theme; }
+  else { document.documentElement.dataset.theme = 'light'; }
+  try { localStorage.setItem('theme', light ? 'dark' : 'light'); } catch (e) {}
+});
 </script>
 </body>
 </html>

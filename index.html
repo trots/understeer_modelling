@@ -18,7 +18,11 @@
   .panel { flex: 1 1 420px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 12px 4px; }
   .panel h2 { font-size: 15px; margin: 0 0 8px; color: var(--muted); font-weight: 600; }
   .panel svg { width: 100%; height: auto; display: block; }
-  .legend { color: var(--muted); font-size: 13px; margin: 10px 2px 0; }
+  details.legend { margin: 10px 2px 0; }
+  details.legend summary { cursor: pointer; color: var(--muted); font-size: 13px; user-select: none; }
+  details.legend summary:hover { color: var(--text); }
+  .legend-body { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .legend-body p { margin: 6px 0; }
   .sw { display: inline-block; width: 12px; height: 4px; border-radius: 2px; margin: 0 5px 2px 12px; vertical-align: middle; }
   .sw.o { background: var(--orange); } .sw.c { background: var(--cyan); }
   .sw.g { background: var(--green); } .sw.r { background: var(--red); }
@@ -57,7 +61,7 @@
       <h2>Колесо (вид сверху)</h2>
       <svg viewBox="0 0 440 400">
         <line x1="30" y1="200" x2="410" y2="200" stroke="#3a4552" stroke-dasharray="5 5"/>
-        <text x="408" y="190" fill="#8a94a3" font-size="11" text-anchor="end">исходное направление (прямо)</text>
+        <text x="408" y="190" fill="#8a94a3" font-size="11" text-anchor="end">прямо</text>
         <g id="skid"></g>
         <g id="wheelG" transform="translate(220,200) rotate(-6)">
           <rect class="tire" x="-62" y="-30" width="124" height="60" rx="14" fill="#24303e" stroke="#7dd3fc" stroke-width="2"/>
@@ -66,13 +70,12 @@
           <line x1="20" y1="-30" x2="20" y2="30" stroke="#3b4a5c"/>
         </g>
         <text id="deltaLabel" x="220" y="330" fill="#d7dde6" font-size="14" text-anchor="middle"></text>
-        <text x="220" y="352" fill="#8a94a3" font-size="12" text-anchor="middle">колесо развёрнуто на угол δ относительно направления движения</text>
         <g id="dynWheel"></g>
       </svg>
     </section>
 
     <section class="panel">
-      <h2>Круг сцепления (силы в пятне контакта)</h2>
+      <h2>Круг сцепления</h2>
       <svg viewBox="0 0 440 400">
         <line x1="220" y1="30" x2="220" y2="370" stroke="#3a4552"/>
         <line x1="40" y1="200" x2="400" y2="200" stroke="#3a4552"/>
@@ -85,14 +88,6 @@
       </svg>
     </section>
   </div>
-
-  <p class="legend">
-    <span class="sw o"></span>Fx — продольная сила (газ/тормоз)
-    <span class="sw c"></span>Fy — боковая сила (поворот)
-    <span class="sw g"></span>результирующая в пределах сцепления и направление движения
-    <span class="sw r"></span>насыщение: шина не выдаёт запрошенную силу
-    <span class="sw gr"></span>куда повёрнуто колесо
-  </p>
 
   <div class="controls">
     <div class="ctl">
@@ -110,22 +105,32 @@
   </div>
 
   <div class="readout">
-    <div>Fx: <b id="rFx">—</b></div>
-    <div>Fy (потребность в повороте): <b id="rFy">—</b></div>
-    <div>|F| результирующая: <b id="rF">—</b></div>
+    <div>Fx (газ/тормоз): <b id="rFx">—</b></div>
+    <div>Fy (поворот): <b id="rFy">—</b></div>
+    <div>Результирующая: <b id="rF">—</b></div>
     <div>Предел μ·Fz: <b id="rLim">—</b></div>
     <div>Использование сцепления: <b id="rUtil">—</b></div>
-    <div>Доступно боковой силы: <b id="rFyAvail">—</b></div>
+    <div>Fy доступно: <b id="rFyAvail">—</b></div>
     <div>Угол сноса α: <b id="rSlip">—</b></div>
   </div>
 
   <div id="verdict" class="ok"></div>
 
-  <footer>
-    Модель: v = 50 км/ч · m = 1400 кг · база L = 2,7 м · μ = 1,0 ·
-    нагрузка на переднюю ось ≈ 60% массы (Fz ≈ 8,2 кН) · предел сцепления передней оси μ·Fz ≈ 8,2 кН ·
-    радиус поворота R = L / tan δ
-  </footer>
+  <footer>v = 50 км/ч · μ = 1,0 · предел μ·Fz ≈ 8,2 кН</footer>
+
+  <details class="legend">
+    <summary>Обозначения и параметры модели</summary>
+    <div class="legend-body">
+      <p>
+        <span class="sw o"></span>Fx — продольная сила (газ/тормоз)
+        <span class="sw c"></span>Fy — боковая сила (поворот)
+        <span class="sw g"></span>результирующая в пределах сцепления и направление движения
+        <span class="sw r"></span>насыщение: шина не выдаёт запрошенную силу
+        <span class="sw gr"></span>куда повёрнуто колесо
+      </p>
+      <p>v = 50 км/ч · m = 1400 кг · база L = 2,7 м · μ = 1,0 · нагрузка на переднюю ось ≈ 60% массы (Fz ≈ 8,2 кН) · предел сцепления передней оси μ·Fz ≈ 8,2 кН · радиус поворота R = L / tan δ</p>
+    </div>
+  </details>
 </main>
 
 <script>

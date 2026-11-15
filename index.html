@@ -122,6 +122,7 @@
     <div>Fy (поворот): <b id="rFy">—</b></div>
     <div>Результирующая: <b id="rF">—</b></div>
     <div>Предел μ·Fz: <b id="rLim">—</b></div>
+    <div>Fz (передняя ось): <b id="rFz">—</b></div>
     <div>Использование сцепления: <b id="rUtil">—</b></div>
     <div>Fy (доступная): <b id="rFyAvail">—</b></div>
     <div>Угол сноса α: <b id="rSlip">—</b></div>
@@ -141,7 +142,7 @@
         <span class="sw r"></span>насыщение шины (превышение предела сцепления)
         <span class="sw gr"></span>направление колёс
       </p>
-      <p>m = 1400 кг · база L = 2,7 м · нагрузка на переднюю ось ≈ 60% массы (Fz ≈ 8,2 кН) · предел сцепления передней оси μ·Fz · радиус поворота R = L / tan δ</p>
+      <p>m = 1400 кг · база L = 2,7 м · высота центра тяжести h = 0,5 м · нагрузка на переднюю ось ≈ 60% массы (Fz ≈ 8,2 кН стат.) · предел сцепления μ·Fz_дин · торможение 70% на переднюю ось · передний привод · радиус поворота R = L / tan δ</p>
     </div>
   </details>
 </main>
@@ -151,6 +152,8 @@ const MASS = 1400;
 const G = 9.81;
 const SHARE = 0.6;
 const BASE = 2.7;
+const H = 0.5;
+const BIAS = 0.7;
 const FZ = SHARE * MASS * G;
 const CX = 220, CY = 200;
 
@@ -167,15 +170,18 @@ function compute() {
   const mu = +$('surface').value;
   const vKmh = +$('speed').value;
   const V = vKmh / 3.6;
-  const LIMIT = mu * FZ;
-  const K_WHEEL = 150 / LIMIT;
-  const K_CIRCLE = 140 / LIMIT;
+  const LIMIT_ST = mu * FZ;
+  const K_WHEEL = 150 / LIMIT_ST;
   $('gasV').textContent = gas + '%';
   $('brakeV').textContent = brake + '%';
   $('steerV').textContent = delta + '°';
   $('speedV').textContent = vKmh + ' км/ч';
 
-  const fx = (gas - brake) / 100 * LIMIT;
+  const fx = (gas - brake) / 100 * LIMIT_ST;
+  const ax = -fx / ((fx < 0 ? BIAS : 1) * MASS);
+  const fzDyn = Math.min(0.9 * MASS * G, Math.max(0.25 * MASS * G, MASS * (SHARE * G + ax * H / BASE)));
+  const LIMIT = mu * fzDyn;
+  const K_CIRCLE = 140 / LIMIT;
   let fy = 0;
   if (Math.abs(delta) > 0.05) {
     const R = BASE / Math.tan(Math.abs(delta) * Math.PI / 180);
@@ -230,6 +236,7 @@ function compute() {
   $('rFy').textContent = kn(fy);
   $('rF').textContent = kn(Math.hypot(fx, fy));
   $('rLim').textContent = kn(LIMIT);
+  $('rFz').textContent = kn(fzDyn);
   $('rUtil').textContent = (util * 100).toFixed(0) + '%';
   $('rFyAvail').textContent = sat ? kn(fyAvail) : '—';
   $('rSlip').textContent = slip.toFixed(1) + '°';

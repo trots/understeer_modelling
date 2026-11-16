@@ -38,13 +38,34 @@
   .sw { display: inline-block; width: 12px; height: 4px; border-radius: 2px; margin: 0 5px 2px 12px; vertical-align: middle; }
   .sw.o { background: var(--orange); } .sw.c { background: var(--cyan); }
   .sw.g { background: var(--green); } .sw.r { background: var(--red); }
-  .controls { display: flex; flex-wrap: wrap; gap: 16px; margin: 20px 0 12px; }
-  .ctl { flex: 1 1 240px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .controls { display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 16px; margin: 20px 0 12px;
+    grid-template-areas: "gas steer speed" "brake steer surface"; }
+  #gasC { grid-area: gas; }
+  #brakeC { grid-area: brake; }
+  #steerC { grid-area: steer; }
+  #speedC { grid-area: speed; }
+  #surfaceC { grid-area: surface; }
+  @media (max-width: 720px) {
+    .controls { grid-template-columns: 1fr; grid-template-areas: "gas" "brake" "steer" "speed" "surface"; }
+  }
+  .ctl { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
   .ctl label { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
   .ctl input[type=range] { width: 100%; }
   .ctl select { width: 100%; background: var(--input); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 7px 8px; font-size: 14px; }
-  .ctl .chk { display: flex; justify-content: flex-start; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 5px 0; }
-  .chk input { width: 16px; height: 16px; accent-color: var(--green); }
+  .ctl-head { display: flex; justify-content: space-between; align-items: center; font-size: 14px; margin-bottom: 8px; }
+  .ctl-right { display: flex; align-items: center; gap: 8px; }
+  .abs-btn { font-size: 11px; font-weight: 700; letter-spacing: .6px; line-height: 1; padding: 4px 8px 3px;
+    border-radius: 6px; border: 1px solid var(--green); background: transparent; color: var(--green);
+    cursor: pointer; transition: color .2s, border-color .2s; font-family: inherit; }
+  .abs-btn:hover { border-color: var(--muted); }
+  .abs-btn.off { color: var(--muted); border-color: var(--muted); }
+  .steer { display: flex; flex-direction: column; }
+  .wheelwrap { height: 104px; display: grid; place-items: center; padding: 2px 0 8px; }
+  .wheelwrap > svg { height: 100px; width: auto; max-width: 85%; display: block; }
+  .wh-tire-c { fill: none; stroke: var(--tire); }
+  .wh-rim { stroke: var(--wheel-stroke); }
+  .wh-spoke-g { fill: var(--wheel-inner); stroke: var(--line); stroke-width: 1; }
+  .wh-hub { fill: var(--wheel-inner); stroke: var(--wheel-stroke); stroke-width: 2; }
   .readout { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; align-content: center; min-height: 76px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 14px; }
   .readout b { font-weight: 600; }
   .sw.gr { background: var(--gray); }
@@ -141,32 +162,55 @@
   </div>
 
   <div class="controls">
-    <div class="ctl">
+    <div class="ctl" id="gasC">
       <label><span data-i18n="c_gas">Throttle</span> <span id="gasV">0%</span></label>
       <input type="range" id="gas" min="0" max="100" step="1" value="0">
     </div>
-    <div class="ctl">
-      <label><span data-i18n="c_brake">Brake</span> <span id="brakeV">0%</span></label>
+    <div class="ctl" id="brakeC">
+      <div class="ctl-head">
+        <span data-i18n="c_brake">Brake</span>
+        <span class="ctl-right">
+          <button id="absBtn" class="abs-btn" type="button" aria-pressed="true">ABS</button>
+          <span id="brakeV">0%</span>
+        </span>
+      </div>
+      <input type="checkbox" id="abs" checked hidden>
       <input type="range" id="brake" min="0" max="100" step="1" value="0">
     </div>
-    <div class="ctl">
-      <label><span data-i18n="c_steer">Steering angle δ</span> <span id="steerV">6°</span></label>
+    <div class="ctl steer" id="steerC">
+      <label><span data-i18n="c_steer">Steering wheel</span> <span id="steerV">6°</span></label>
+      <div class="wheelwrap">
+        <svg viewBox="-72 -72 144 144" aria-hidden="true">
+          <defs>
+            <path id="spoke" d="M -6.5,-8 L 6.5,-8 L 4,-52 L -4,-52 Z"/>
+          </defs>
+          <g id="wheelRot">
+            <circle r="60" class="wh-tire-c" stroke-width="12"/>
+            <circle r="53" fill="none" class="wh-rim" stroke-width="2.5"/>
+            <g class="wh-spoke-g">
+              <use href="#spoke"/>
+              <use href="#spoke" transform="rotate(120)"/>
+              <use href="#spoke" transform="rotate(240)"/>
+            </g>
+            <circle r="12" class="wh-hub"/>
+            <circle r="6.5" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+            <line x1="0" y1="-57.5" x2="0" y2="-49.5" stroke="var(--orange)" stroke-width="5" stroke-linecap="round"/>
+          </g>
+        </svg>
+      </div>
       <input type="range" id="steer" min="-30" max="30" step="0.5" value="6">
     </div>
-    <div class="ctl">
+    <div class="ctl" id="speedC">
       <label><span data-i18n="c_speed">Speed</span> <span id="speedV">50 km/h</span></label>
       <input type="range" id="speed" min="20" max="100" step="5" value="50">
     </div>
-    <div class="ctl">
+    <div class="ctl" id="surfaceC">
       <label data-i18n="c_surface">Surface</label>
       <select id="surface">
         <option value="1.0" selected data-i18n="s_dry">Dry asphalt (μ = 1.0)</option>
         <option value="0.6" data-i18n="s_wet">Wet road (μ = 0.6)</option>
         <option value="0.2" data-i18n="s_ice">Ice (μ = 0.2)</option>
       </select>
-    </div>
-    <div class="ctl">
-      <label class="chk"><input type="checkbox" id="abs" checked> <span data-i18n="c_abs">ABS (anti-lock braking system)</span></label>
     </div>
   </div>
 
@@ -211,6 +255,7 @@ const FX_GAS_MAX = 8000;
 const FX_BRAKE_MAX = 12000;
 const FZ = SHARE * MASS * G;
 const CX = 220, CY = 200;
+const WHEEL_RATIO = 540 / 30;
 
 const $ = id => document.getElementById(id);
 
@@ -236,10 +281,12 @@ const I18N = {
     params: 'm = 1400 kg · wheelbase L = 2.7 m · CG height h = 0.5 m · front axle load ≈ 60% of weight (Fz ≈ 8.2 kN static) · grip limit μ·Fz_dyn · braking 70% on front axle · front-wheel drive · turn radius R = L / tan δ · with ABS off: lockup when |Fx| > 0.7·μ·Fz_dyn, lateral force of a sliding tire = 0',
     c_gas: 'Throttle',
     c_brake: 'Brake',
-    c_steer: 'Steering angle δ',
+    c_steer: 'Steering wheel',
     c_speed: 'Speed',
     c_surface: 'Surface',
     c_abs: 'ABS (anti-lock braking system)',
+    abs_on: 'on',
+    abs_off: 'off',
     s_dry: 'Dry asphalt (μ = 1.0)',
     s_wet: 'Wet road (μ = 0.6)',
     s_ice: 'Ice (μ = 0.2)',
@@ -284,10 +331,12 @@ const I18N = {
     params: 'm = 1400 кг · база L = 2,7 м · высота центра тяжести h = 0,5 м · нагрузка на переднюю ось ≈ 60% массы (Fz ≈ 8,2 кН стат.) · предел сцепления μ·Fz_дин · торможение 70% на переднюю ось · передний привод · радиус поворота R = L / tan δ · при ABS выкл: блокировка при |Fx| > 0.7·μ·Fz_дин, боковая сила скользящего колеса = 0',
     c_gas: 'Газ',
     c_brake: 'Тормоз',
-    c_steer: 'Угол поворота колёс δ',
+    c_steer: 'Руль',
     c_speed: 'Скорость',
     c_surface: 'Поверхность',
     c_abs: 'ABS (антиблокировочная система)',
+    abs_on: 'вкл',
+    abs_off: 'выкл',
     s_dry: 'Сухой асфальт (μ = 1,0)',
     s_wet: 'Мокрая дорога (μ = 0,6)',
     s_ice: 'Лёд (μ = 0,2)',
@@ -323,6 +372,7 @@ function applyLang() {
   if (lb) { lb.textContent = lang === 'ru' ? 'EN' : 'RU'; lb.title = t('lang_title'); }
   const tb = $('themeBtn');
   if (tb) { tb.title = t('theme_title'); tb.setAttribute('aria-label', t('theme_title')); }
+  syncAbsBtn();
   compute();
 }
 
@@ -343,6 +393,7 @@ function compute() {
   $('gasV').textContent = gas + '%';
   $('brakeV').textContent = brake + '%';
   $('steerV').textContent = delta + '°';
+  $('wheelRot').setAttribute('transform', `rotate(${(-delta * WHEEL_RATIO).toFixed(1)})`);
   $('speedV').textContent = vKmh + ' ' + t('u_kmh');
 
   const fxReq = (gas * FX_GAS_MAX - brake * FX_BRAKE_MAX) / 100;
@@ -449,6 +500,19 @@ function compute() {
 }
 
 ['gas', 'brake', 'steer', 'speed', 'surface', 'abs'].forEach(id => $(id).addEventListener('input', compute));
+
+function syncAbsBtn() {
+  const on = $('abs').checked;
+  const btn = $('absBtn');
+  btn.classList.toggle('off', !on);
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  btn.title = t('c_abs') + ' — ' + (on ? t('abs_on') : t('abs_off'));
+}
+$('absBtn').addEventListener('click', () => {
+  $('abs').checked = !$('abs').checked;
+  syncAbsBtn();
+  compute();
+});
 applyLang();
 
 let savedTheme = null;

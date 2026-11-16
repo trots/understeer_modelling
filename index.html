@@ -59,6 +59,16 @@
     cursor: pointer; transition: color .2s, border-color .2s; font-family: inherit; }
   .abs-btn:hover { border-color: var(--muted); }
   .abs-btn.off { color: var(--muted); border-color: var(--muted); }
+  details.params { margin: 12px 2px 12px; }
+  details.params summary { cursor: pointer; color: var(--muted); font-size: 13px; user-select: none; }
+  details.params summary:hover { color: var(--text); }
+  .params-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px 18px; margin-top: 12px; }
+  .pitem label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .pitem input[type=range] { width: 100%; }
+  .params-reset { margin-top: 12px; font-size: 13px; padding: 5px 14px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--input); color: var(--text); cursor: pointer; }
+  .params-reset:hover { border-color: var(--muted); }
+  .params-note { color: var(--muted); font-size: 12px; line-height: 1.6; margin: 14px 0 2px; }
   .steer { display: flex; flex-direction: column; }
   .wheelwrap { height: 104px; display: grid; place-items: center; padding: 2px 0 8px; }
   .wheelwrap > svg { height: 100px; width: auto; max-width: 85%; display: block; }
@@ -74,7 +84,6 @@
   #statusLabel { font-weight: 600; }
   #statusLabel.ok { fill: var(--green); }
   #statusLabel.bad { fill: var(--red); }
-  footer { margin-top: 18px; color: var(--muted); font-size: 13px; }
 
   .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
   .head-btns { display: flex; gap: 8px; flex: none; margin-top: 2px; }
@@ -225,10 +234,32 @@
     <div><span data-i18n="r_slip">Slip angle α:</span> <b id="rSlip">—</b></div>
   </div>
 
-  <footer id="fline"></footer>
+  <details class="params">
+    <summary data-i18n="p_sum">Model parameters</summary>
+    <div class="params-body">
+      <div class="pitem">
+        <label><span data-i18n="p_mass">Vehicle mass</span> <span id="pMassV">1400 kg</span></label>
+        <input type="range" id="pMass" min="800" max="2500" step="50" value="1400">
+      </div>
+      <div class="pitem">
+        <label><span data-i18n="p_base">Wheelbase</span> <span id="pBaseV">2.7 m</span></label>
+        <input type="range" id="pBase" min="2.0" max="3.5" step="0.1" value="2.7">
+      </div>
+      <div class="pitem">
+        <label><span data-i18n="p_h">CG height</span> <span id="pHV">0.5 m</span></label>
+        <input type="range" id="pH" min="0.3" max="0.8" step="0.05" value="0.5">
+      </div>
+      <div class="pitem">
+        <label><span data-i18n="p_share">Front axle load share</span> <span id="pShareV">60%</span></label>
+        <input type="range" id="pShare" min="45" max="65" step="1" value="60">
+      </div>
+    </div>
+    <button id="pReset" class="params-reset" data-i18n="p_reset">Reset to defaults</button>
+    <p id="paramsLine" class="params-note" data-i18n="params"></p>
+  </details>
 
   <details class="legend">
-    <summary data-i18n="leg_sum">Legend and model parameters</summary>
+    <summary data-i18n="leg_sum">Legend</summary>
     <div class="legend-body">
       <p>
         <span class="sw o"></span><span data-i18n="leg_fx">Fx — longitudinal force (throttle/brake)</span>
@@ -238,22 +269,19 @@
         <span class="sw d"></span><span data-i18n="leg_thr">lockup threshold (ABS off): |Fx| = 0.7·μ·Fz_dyn</span>
         <span class="sw gr"></span><span data-i18n="leg_head">wheel heading</span>
       </p>
-      <p data-i18n="params">m = 1400 kg · wheelbase L = 2.7 m · CG height h = 0.5 m · front axle load ≈ 60% of weight (Fz ≈ 8.2 kN static) · grip limit μ·Fz_dyn · braking 70% on front axle · front-wheel drive · turn radius R = L / tan δ · with ABS off: lockup when |Fx| > 0.7·μ·Fz_dyn, lateral force of a sliding tire = 0</p>
     </div>
   </details>
 </main>
 
 <script>
-const MASS = 1400;
 const G = 9.81;
-const SHARE = 0.6;
-const BASE = 2.7;
-const H = 0.5;
 const BIAS = 0.7;
 const SLIDE = 0.7;
+const DEF_MASS = 1400, DEF_BASE = 2.7, DEF_H = 0.5, DEF_SHARE = 0.6;
 const FX_GAS_MAX = 8000;
 const FX_BRAKE_MAX = 12000;
-const FZ = SHARE * MASS * G;
+const FZ_DEF = DEF_SHARE * DEF_MASS * G;
+let MASS = DEF_MASS, BASE = DEF_BASE, H = DEF_H, SHARE = DEF_SHARE;
 const CX = 220, CY = 200;
 const WHEEL_RATIO = 540 / 30;
 
@@ -271,14 +299,14 @@ const I18N = {
     ax_fx_l: '← brake — Fx',
     ax_fy_t: 'Fy — turn left',
     ax_fy_b: 'Fy — turn right',
-    leg_sum: 'Legend and model parameters',
+    leg_sum: 'Legend',
     leg_fx: 'Fx — longitudinal force (throttle/brake)',
     leg_fy: 'Fy — lateral force (cornering)',
     leg_res: 'resultant within grip and direction of motion',
     leg_sat: 'tire saturation (grip limit exceeded)',
     leg_thr: 'lockup threshold (ABS off): |Fx| = 0.7·μ·Fz_dyn',
     leg_head: 'wheel heading',
-    params: 'm = 1400 kg · wheelbase L = 2.7 m · CG height h = 0.5 m · front axle load ≈ 60% of weight (Fz ≈ 8.2 kN static) · grip limit μ·Fz_dyn · braking 70% on front axle · front-wheel drive · turn radius R = L / tan δ · with ABS off: lockup when |Fx| > 0.7·μ·Fz_dyn, lateral force of a sliding tire = 0',
+    params: 'm = {m} kg · wheelbase L = {l} m · CG height h = {h} m · front axle load ≈ {s}% of weight (Fz ≈ {fz} static) · grip limit μ·Fz_dyn · braking 70% on front axle · front-wheel drive · turn radius R = L / tan δ · with ABS off: lockup when |Fx| > 0.7·μ·Fz_dyn, lateral force of a sliding tire = 0',
     c_gas: 'Throttle',
     c_brake: 'Brake',
     c_steer: 'Steering wheel',
@@ -287,6 +315,12 @@ const I18N = {
     c_abs: 'ABS (anti-lock braking system)',
     abs_on: 'on',
     abs_off: 'off',
+    p_sum: 'Model parameters',
+    p_mass: 'Vehicle mass',
+    p_base: 'Wheelbase',
+    p_h: 'CG height',
+    p_share: 'Front axle load share',
+    p_reset: 'Reset to defaults',
     s_dry: 'Dry asphalt (μ = 1.0)',
     s_wet: 'Wet road (μ = 0.6)',
     s_ice: 'Ice (μ = 0.2)',
@@ -300,9 +334,10 @@ const I18N = {
     r_slip: 'Slip angle α:',
     u_kn: ' kN',
     u_kmh: 'km/h',
+    u_kg: ' kg',
+    u_m: ' m',
     a_accel: 'accel',
     a_brake: 'braking',
-    f_line: 'v = {v} km/h · μ = {m} · limit μ·Fz ≈ {lim}',
     st_ok: 'Within grip',
     st_lock: 'Wheel lockup',
     st_spin: 'Wheelspin',
@@ -321,14 +356,14 @@ const I18N = {
     ax_fx_l: '← тормоз — Fx',
     ax_fy_t: 'Fy — поворот влево',
     ax_fy_b: 'Fy — поворот вправо',
-    leg_sum: 'Обозначения и параметры модели',
+    leg_sum: 'Обозначения',
     leg_fx: 'Fx — продольная сила (газ/тормоз)',
     leg_fy: 'Fy — боковая сила (поворот)',
     leg_res: 'результирующая в пределах сцепления и направление движения',
     leg_sat: 'насыщение шины (превышение предела сцепления)',
     leg_thr: 'порог блокировки (ABS выкл): |Fx| = 0,7·μ·Fz_дин',
     leg_head: 'направление колёс',
-    params: 'm = 1400 кг · база L = 2,7 м · высота центра тяжести h = 0,5 м · нагрузка на переднюю ось ≈ 60% массы (Fz ≈ 8,2 кН стат.) · предел сцепления μ·Fz_дин · торможение 70% на переднюю ось · передний привод · радиус поворота R = L / tan δ · при ABS выкл: блокировка при |Fx| > 0.7·μ·Fz_дин, боковая сила скользящего колеса = 0',
+    params: 'm = {m} кг · база L = {l} м · высота центра тяжести h = {h} м · нагрузка на переднюю ось ≈ {s}% массы (Fz ≈ {fz} стат.) · предел сцепления μ·Fz_дин · торможение 70% на переднюю ось · передний привод · радиус поворота R = L / tan δ · при ABS выкл: блокировка при |Fx| > 0.7·μ·Fz_дин, боковая сила скользящего колеса = 0',
     c_gas: 'Газ',
     c_brake: 'Тормоз',
     c_steer: 'Руль',
@@ -337,6 +372,12 @@ const I18N = {
     c_abs: 'ABS (антиблокировочная система)',
     abs_on: 'вкл',
     abs_off: 'выкл',
+    p_sum: 'Параметры модели',
+    p_mass: 'Масса автомобиля',
+    p_base: 'Колёсная база',
+    p_h: 'Высота центра тяжести',
+    p_share: 'Доля нагрузки на переднюю ось',
+    p_reset: 'Сбросить параметры',
     s_dry: 'Сухой асфальт (μ = 1,0)',
     s_wet: 'Мокрая дорога (μ = 0,6)',
     s_ice: 'Лёд (μ = 0,2)',
@@ -350,9 +391,10 @@ const I18N = {
     r_slip: 'Угол сноса α:',
     u_kn: ' кН',
     u_kmh: 'км/ч',
+    u_kg: ' кг',
+    u_m: ' м',
     a_accel: 'разгон',
     a_brake: 'торможение',
-    f_line: 'v = {v} км/ч · μ = {m} · предел μ·Fz ≈ {lim}',
     st_ok: 'В пределах сцепления',
     st_lock: 'Блокировка колёс',
     st_spin: 'Пробуксовка',
@@ -378,6 +420,7 @@ function applyLang() {
 
 const kn = n => (n / 1000).toFixed(2) + t('u_kn');
 const f1 = n => n.toFixed(1);
+const dec = n => { const s = n.toFixed(1); return lang === 'ru' ? s.replace('.', ',') : s; };
 
 function ln(x1, y1, x2, y2, cls, w, mk) {
   return `<line x1="${f1(x1)}" y1="${f1(y1)}" x2="${f1(x2)}" y2="${f1(y2)}" class="${cls}" stroke-width="${w}" marker-end="url(#${mk})"/>`;
@@ -388,7 +431,18 @@ function compute() {
   const mu = +$('surface').value;
   const vKmh = +$('speed').value;
   const V = vKmh / 3.6;
-  const LIMIT_ST = mu * FZ;
+  MASS = +$('pMass').value;
+  BASE = +$('pBase').value;
+  H = +$('pH').value;
+  SHARE = +$('pShare').value / 100;
+  $('pMassV').textContent = MASS + t('u_kg');
+  $('pBaseV').textContent = dec(BASE) + t('u_m');
+  $('pHV').textContent = dec(H) + t('u_m');
+  $('pShareV').textContent = Math.round(SHARE * 100) + '%';
+  const fzSt = SHARE * MASS * G;
+  const fxGasMax = FX_GAS_MAX * fzSt / FZ_DEF;
+  const fxBrakeMax = FX_BRAKE_MAX * fzSt / FZ_DEF;
+  const LIMIT_ST = mu * fzSt;
   const K_WHEEL = 150 / LIMIT_ST;
   $('gasV').textContent = gas + '%';
   $('brakeV').textContent = brake + '%';
@@ -396,7 +450,7 @@ function compute() {
   $('wheelRot').setAttribute('transform', `rotate(${(-delta * WHEEL_RATIO).toFixed(1)})`);
   $('speedV').textContent = vKmh + ' ' + t('u_kmh');
 
-  const fxReq = (gas * FX_GAS_MAX - brake * FX_BRAKE_MAX) / 100;
+  const fxReq = (gas * fxGasMax - brake * fxBrakeMax) / 100;
   const slideMu = SLIDE * mu;
   const fzFor = f => {
     const ax = -f / ((f < 0 ? BIAS : 1) * MASS);
@@ -496,10 +550,19 @@ function compute() {
   $('rFyAvail').textContent = slide ? kn(fyAvail) : '—';
   $('rSlip').textContent = slip.toFixed(1) + '°';
   $('rSlip').style.color = slip > 0.05 ? 'var(--red)' : '';
-  $('fline').textContent = t('f_line').replace('{v}', vKmh).replace('{m}', mu.toFixed(1)).replace('{lim}', kn(LIMIT));
+  $('paramsLine').textContent = t('params')
+    .replace('{m}', MASS).replace('{l}', dec(BASE)).replace('{h}', dec(H))
+    .replace('{s}', Math.round(SHARE * 100)).replace('{fz}', kn(fzSt));
 }
 
-['gas', 'brake', 'steer', 'speed', 'surface', 'abs'].forEach(id => $(id).addEventListener('input', compute));
+['gas', 'brake', 'steer', 'speed', 'surface', 'abs', 'pMass', 'pBase', 'pH', 'pShare'].forEach(id => $(id).addEventListener('input', compute));
+$('pReset').addEventListener('click', () => {
+  $('pMass').value = DEF_MASS;
+  $('pBase').value = DEF_BASE;
+  $('pH').value = DEF_H;
+  $('pShare').value = DEF_SHARE * 100;
+  compute();
+});
 
 function syncAbsBtn() {
   const on = $('abs').checked;

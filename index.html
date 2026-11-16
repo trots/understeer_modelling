@@ -76,8 +76,22 @@
   .wh-rim { stroke: var(--wheel-stroke); }
   .wh-spoke-g { fill: var(--wheel-inner); stroke: var(--line); stroke-width: 1; }
   .wh-hub { fill: var(--wheel-inner); stroke: var(--wheel-stroke); stroke-width: 2; }
-  .readout { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; align-content: center; min-height: 76px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 14px; }
+  .readout { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 24px; align-items: center;
+    min-height: 76px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 14px; }
+  @media (max-width: 720px) {
+    .readout { grid-template-columns: repeat(2, 1fr); }
+  }
   .readout b { font-weight: 600; }
+  .nowrap { white-space: nowrap; }
+  .qm { display: inline-grid; place-items: center; width: 14px; height: 14px; margin-left: 4px;
+    border-radius: 50%; border: 1px solid var(--muted); color: var(--muted);
+    font-size: 10px; font-style: normal; line-height: 1; cursor: help; position: relative; }
+  .qm::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 8px); left: 50%;
+    transform: translateX(-50%); width: max-content; max-width: 240px; white-space: normal;
+    background: var(--input); border: 1px solid var(--border); border-radius: 6px;
+    padding: 7px 10px; font-size: 12px; line-height: 1.45; color: var(--text);
+    pointer-events: none; opacity: 0; visibility: hidden; transition: opacity .15s; z-index: 10; }
+  .qm:hover::after { opacity: 1; visibility: visible; }
   .sw.gr { background: var(--gray); }
   #wheelG .tire { fill: var(--tire); stroke: var(--wheel-stroke); transition: stroke .2s, filter .2s; }
   #wheelG.slip .tire { stroke: var(--red); filter: drop-shadow(0 0 7px rgba(248,113,113,.7)); }
@@ -224,14 +238,14 @@
   </div>
 
   <div class="readout">
-    <div><span data-i18n="r_fx">Fx (throttle/brake):</span> <b id="rFx">—</b></div>
-    <div><span data-i18n="r_fy">Fy (cornering):</span> <b id="rFy">—</b></div>
-    <div><span data-i18n="r_f">Resultant:</span> <b id="rF">—</b></div>
-    <div><span data-i18n="r_lim">Limit μ·Fz:</span> <b id="rLim">—</b></div>
-    <div><span data-i18n="r_fz">Fz (front axle):</span> <b id="rFz">—</b></div>
-    <div><span data-i18n="r_util">Grip utilization:</span> <b id="rUtil">—</b></div>
-    <div><span data-i18n="r_fyav">Fy (available):</span> <b id="rFyAvail">—</b></div>
-    <div><span data-i18n="r_slip">Slip angle α:</span> <b id="rSlip">—</b></div>
+    <div><span data-i18n="r_fx">Fx (throttle/brake):</span> <span class="nowrap"><b id="rFx">—</b> <i class="qm" data-tipkey="tip_fx">?</i></span></div>
+    <div><span data-i18n="r_fy">Fy (cornering):</span> <span class="nowrap"><b id="rFy">—</b> <i class="qm" data-tipkey="tip_fy">?</i></span></div>
+    <div><span data-i18n="r_f">Resultant:</span> <span class="nowrap"><b id="rF">—</b> <i class="qm" data-tipkey="tip_fres">?</i></span></div>
+    <div><span data-i18n="r_lim">Limit μ·Fz:</span> <span class="nowrap"><b id="rLim">—</b> <i class="qm" data-tipkey="tip_lim">?</i></span></div>
+    <div><span data-i18n="r_fz">Fz (front axle):</span> <span class="nowrap"><b id="rFz">—</b> <i class="qm" data-tipkey="tip_fz">?</i></span></div>
+    <div><span data-i18n="r_util">Grip utilization:</span> <span class="nowrap"><b id="rUtil">—</b> <i class="qm" data-tipkey="tip_util">?</i></span></div>
+    <div><span data-i18n="r_fyav">Fy (available):</span> <span class="nowrap"><b id="rFyAvail">—</b> <i class="qm" data-tipkey="tip_fyav">?</i></span></div>
+    <div><span data-i18n="r_slip">Slip angle α:</span> <span class="nowrap"><b id="rSlip">—</b> <i class="qm" data-tipkey="tip_slip">?</i></span></div>
   </div>
 
   <details class="params">
@@ -321,6 +335,14 @@ const I18N = {
     p_h: 'CG height',
     p_share: 'Front axle load share',
     p_reset: 'Reset to defaults',
+    tip_fx: 'Longitudinal force from the pedals. Gas pulls forward (front-wheel drive), brake holds back. Limited by grip: |Fx| ≤ μ·Fz_dyn.',
+    tip_fy: 'Lateral force needed for the turn: share·m·v²/R, R = L/tan δ. The tire can only deliver what the friction circle leaves after Fx.',
+    tip_fres: 'Vector sum of Fx and Fy. Its tip must stay inside the friction circle.',
+    tip_lim: 'Grip limit μ·Fz_dyn. Grows under braking (weight transfers to the front axle), shrinks under gas (weight transfers back).',
+    tip_fz: 'Current load on the front axle: static weight share plus or minus longitudinal weight transfer.',
+    tip_util: 'Share of the grip limit demanded by the pedals and cornering together. Values over 100% mean the request exceeds the limit.',
+    tip_fyav: 'Lateral force still available at the current Fx: √((μ·Fz)² − Fx²). Shown when the tire is saturated or locked.',
+    tip_slip: 'Angle between wheel heading and the actual velocity vector. Grows as the tire saturates — the car understeers.',
     s_dry: 'Dry asphalt (μ = 1.0)',
     s_wet: 'Wet road (μ = 0.6)',
     s_ice: 'Ice (μ = 0.2)',
@@ -378,6 +400,14 @@ const I18N = {
     p_h: 'Высота центра тяжести',
     p_share: 'Доля нагрузки на переднюю ось',
     p_reset: 'Сбросить параметры',
+    tip_fx: 'Продольная сила от педалей. Газ тянет вперёд (передний привод), тормоз удерживает назад. Ограничена сцеплением: |Fx| ≤ μ·Fz_дин.',
+    tip_fy: 'Боковая сила, нужная для поворота: доля·m·v²/R, где R = L/tan δ. Шина выдаёт лишь остаток круга сцепления после Fx.',
+    tip_fres: 'Векторная сумма Fx и Fy. Её конец должен оставаться внутри круга сцепления.',
+    tip_lim: 'Предел сцепления μ·Fz_дин. Растёт при торможении (вес переносится на передок), падает при газе (вес уходит назад).',
+    tip_fz: 'Текущая нагрузка на переднюю ось: статическая доля веса плюс/минус продольный перенос веса.',
+    tip_util: 'Доля предела сцепления, которую требуют педали и поворот вместе. Больше 100% — запрос выходит за предел.',
+    tip_fyav: 'Боковая сила, ещё доступная при текущем Fx: √((μ·Fz)² − Fx²). Показывается при насыщении или блокировке шины.',
+    tip_slip: 'Угол между направлением колёс и фактическим вектором скорости. Растёт при насыщении шины — машина недоповорачивает.',
     s_dry: 'Сухой асфальт (μ = 1,0)',
     s_wet: 'Мокрая дорога (μ = 0,6)',
     s_ice: 'Лёд (μ = 0,2)',
@@ -410,6 +440,7 @@ const t = key => I18N[lang][key] || key;
 function applyLang() {
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-tipkey]').forEach(el => { el.dataset.tip = t(el.dataset.tipkey); });
   const lb = $('langBtn');
   if (lb) { lb.textContent = lang === 'ru' ? 'EN' : 'RU'; lb.title = t('lang_title'); }
   const tb = $('themeBtn');

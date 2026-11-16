@@ -69,6 +69,9 @@
     border: 1px solid var(--border); background: var(--input); color: var(--text); cursor: pointer; }
   .params-reset:hover { border-color: var(--muted); }
   .params-note { color: var(--muted); font-size: 12px; line-height: 1.6; margin: 14px 0 2px; }
+  footer.foot { margin-top: 20px; color: var(--muted); font-size: 13px; display: flex; gap: 8px; align-items: center; }
+  footer.foot a { color: var(--cyan); text-decoration: none; }
+  footer.foot a:hover { text-decoration: underline; }
   .steer { display: flex; flex-direction: column; }
   .wheelwrap { height: 104px; display: grid; place-items: center; padding: 2px 0 8px; }
   .wheelwrap > svg { height: 100px; width: auto; max-width: 85%; display: block; }
@@ -285,6 +288,12 @@
       </p>
     </div>
   </details>
+
+  <footer class="foot">
+    <span data-i18n="auth_name">Alexander Trotsenko</span>
+    <span>·</span>
+    <a id="authLink" href="https://github.com/trots" target="_blank" rel="noopener" data-i18n="auth_link">GitHub</a>
+  </footer>
 </main>
 
 <script>
@@ -365,7 +374,9 @@ const I18N = {
     st_spin: 'Wheelspin',
     st_sat: 'Tire saturated — understeer',
     lang_title: 'Switch language',
-    theme_title: 'Toggle theme'
+    theme_title: 'Toggle theme',
+    auth_name: 'Alexander Trotsenko',
+    auth_link: 'GitHub'
   },
   ru: {
     title: 'Моделирование сноса передней оси',
@@ -430,7 +441,9 @@ const I18N = {
     st_spin: 'Пробуксовка',
     st_sat: 'Шина насыщена — снос',
     lang_title: 'Сменить язык',
-    theme_title: 'Переключить тему'
+    theme_title: 'Переключить тему',
+    auth_name: 'Александр Троценко',
+    auth_link: 'Taplink'
   }
 };
 let lang = 'en';
@@ -445,6 +458,8 @@ function applyLang() {
   if (lb) { lb.textContent = lang === 'ru' ? 'EN' : 'RU'; lb.title = t('lang_title'); }
   const tb = $('themeBtn');
   if (tb) { tb.title = t('theme_title'); tb.setAttribute('aria-label', t('theme_title')); }
+  const al = $('authLink');
+  if (al) al.href = lang === 'ru' ? 'https://taplink.cc/atrotsenko' : 'https://github.com/trots';
   syncAbsBtn();
   compute();
 }

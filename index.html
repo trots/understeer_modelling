@@ -71,6 +71,9 @@
   .c-g { stroke: var(--green); } .c-r { stroke: var(--red); } .c-o { stroke: var(--orange); }
   .c-c { stroke: var(--cyan); } .c-gr { stroke: var(--gray); } .c-mut { stroke: var(--proj); }
   .dem { fill: none; stroke: var(--red); stroke-width: 2; }
+  .thr { fill: var(--bg); stroke: var(--gray); stroke-width: 2; }
+  .thr.hit { fill: var(--red); stroke: var(--red); }
+  .sw.d { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--gray); background: transparent; margin-bottom: 0; }
   #ah-green path { fill: var(--green); }
   #ah-red path { fill: var(--red); }
   #ah-orange path { fill: var(--orange); }
@@ -188,6 +191,7 @@
         <span class="sw c"></span><span data-i18n="leg_fy">Fy — lateral force (cornering)</span>
         <span class="sw g"></span><span data-i18n="leg_res">resultant within grip and direction of motion</span>
         <span class="sw r"></span><span data-i18n="leg_sat">tire saturation (grip limit exceeded)</span>
+        <span class="sw d"></span><span data-i18n="leg_thr">lockup threshold (ABS off): |Fx| = 0.7·μ·Fz_dyn</span>
         <span class="sw gr"></span><span data-i18n="leg_head">wheel heading</span>
       </p>
       <p data-i18n="params">m = 1400 kg · wheelbase L = 2.7 m · CG height h = 0.5 m · front axle load ≈ 60% of weight (Fz ≈ 8.2 kN static) · grip limit μ·Fz_dyn · braking 70% on front axle · front-wheel drive · turn radius R = L / tan δ · with ABS off: lockup when |Fx| > 0.7·μ·Fz_dyn, lateral force of a sliding tire = 0</p>
@@ -227,6 +231,7 @@ const I18N = {
     leg_fy: 'Fy — lateral force (cornering)',
     leg_res: 'resultant within grip and direction of motion',
     leg_sat: 'tire saturation (grip limit exceeded)',
+    leg_thr: 'lockup threshold (ABS off): |Fx| = 0.7·μ·Fz_dyn',
     leg_head: 'wheel heading',
     params: 'm = 1400 kg · wheelbase L = 2.7 m · CG height h = 0.5 m · front axle load ≈ 60% of weight (Fz ≈ 8.2 kN static) · grip limit μ·Fz_dyn · braking 70% on front axle · front-wheel drive · turn radius R = L / tan δ · with ABS off: lockup when |Fx| > 0.7·μ·Fz_dyn, lateral force of a sliding tire = 0',
     c_gas: 'Throttle',
@@ -274,6 +279,7 @@ const I18N = {
     leg_fy: 'Fy — боковая сила (поворот)',
     leg_res: 'результирующая в пределах сцепления и направление движения',
     leg_sat: 'насыщение шины (превышение предела сцепления)',
+    leg_thr: 'порог блокировки (ABS выкл): |Fx| = 0,7·μ·Fz_дин',
     leg_head: 'направление колёс',
     params: 'm = 1400 кг · база L = 2,7 м · высота центра тяжести h = 0,5 м · нагрузка на переднюю ось ≈ 60% массы (Fz ≈ 8,2 кН стат.) · предел сцепления μ·Fz_дин · торможение 70% на переднюю ось · передний привод · радиус поворота R = L / tan δ · при ABS выкл: блокировка при |Fx| > 0.7·μ·Fz_дин, боковая сила скользящего колеса = 0',
     c_gas: 'Газ',
@@ -353,8 +359,12 @@ function compute() {
     return Math.sign(fxReq) * Math.min(Math.abs(fxReq), mu * fz, cap);
   };
   let fx = applyGrip(fzDyn);
-  fzDyn = fzFor(fx);
-  fx = applyGrip(fzDyn);
+  for (let i = 0; i < 10; i++) {
+    const fzNext = fzFor(fx);
+    if (Math.abs(fzNext - fzDyn) < 1) { fzDyn = fzNext; fx = applyGrip(fzDyn); break; }
+    fzDyn = fzNext;
+    fx = applyGrip(fzDyn);
+  }
   const LIMIT = mu * fzDyn;
   const K_CIRCLE = 140 / LIMIT;
   let fy = 0;
@@ -405,11 +415,19 @@ function compute() {
   $('dynWheel').innerHTML = dw;
 
   const fxP = fx * K_CIRCLE;
+  const fxReqP = Math.max(-172, Math.min(172, fxReq * K_CIRCLE));
   const fyS = fy * sgn;
   const fyP = Math.max(-LIMIT, Math.min(LIMIT, fyS)) * K_CIRCLE;
   const resX = fxP, resY = fyAch * sgn * K_CIRCLE;
   let dc = '';
+  if (!$('abs').checked) {
+    const thr = SLIDE * LIMIT * K_CIRCLE;
+    dc += `<circle cx="${f1(CX - thr)}" cy="${CY}" r="4.5" class="thr${locked && fxReq < 0 ? ' hit' : ''}"/>`;
+    dc += `<circle cx="${f1(CX + thr)}" cy="${CY}" r="4.5" class="thr${locked && fxReq > 0 ? ' hit' : ''}"/>`;
+  }
   if (Math.abs(fxP) > 1) dc += ln(CX, CY, CX + fxP, CY, 'c-o', 2.5, 'ah-orange');
+  if (Math.abs(fxReqP - fxP) > 2)
+    dc += `<line x1="${f1(CX + fxP)}" y1="${CY}" x2="${f1(CX + fxReqP)}" y2="${CY}" class="c-o" stroke-width="2" stroke-dasharray="5 4" opacity="0.75"/>`;
   if (Math.abs(fyP) > 1) dc += ln(CX, CY, CX, CY - fyP, 'c-c', 2.5, 'ah-cyan');
   if (Math.abs(fxP) > 1 && Math.abs(fyP) > 1)
     dc += `<path d="M ${f1(CX + fxP)} ${CY} L ${f1(CX + fxP)} ${f1(CY - fyP)} L ${CX} ${f1(CY - fyP)}" class="c-mut" fill="none" stroke-dasharray="4 4"/>`;

@@ -158,7 +158,7 @@
 
   <div class="panels">
     <section class="panel">
-      <h2 data-i18n="h2_wheel">Wheel (top view)</h2>
+      <h2><span data-i18n="h2_wheel">Wheel (top view)</span> <i class="qm" data-tipkey="tip_wheel">?</i></h2>
       <svg viewBox="0 0 440 400">
         <line x1="30" y1="200" x2="410" y2="200" class="axline" stroke-dasharray="5 5"/>
         <text x="408" y="190" class="mut" font-size="11" text-anchor="end" data-i18n="straight">straight</text>
@@ -175,7 +175,7 @@
     </section>
 
     <section class="panel">
-      <h2 data-i18n="h2_circle">Friction circle</h2>
+      <h2><span data-i18n="h2_circle">Friction circle</span> <i class="qm" data-tipkey="tip_circle">?</i></h2>
       <svg viewBox="0 0 440 400">
         <line x1="220" y1="30" x2="220" y2="370" class="axline"/>
         <line x1="40" y1="200" x2="400" y2="200" class="axline"/>
@@ -328,6 +328,8 @@ const I18N = {
     sub: 'How acceleration or braking in a turn affects front tire grip (front-wheel-drive model)',
     h2_wheel: 'Wheel (top view)',
     h2_circle: 'Friction circle',
+    tip_wheel: 'Orange — pedal force, cyan — cornering force, gray — wheel heading, green — direction of motion. Green lagging behind gray is the slip.',
+    tip_circle: 'The tire grip limit. The combined force of pedals and cornering must stay inside; drawn as an ellipse because a tire delivers different force along and across the road.',
     straight: 'straight',
     ax_fx_r: 'Fx — accel →',
     ax_fx_l: '← brake — Fx',
@@ -363,14 +365,14 @@ const I18N = {
     p_kx: 'Longitudinal limit Kx',
     p_ky: 'Lateral limit Ky',
     p_reset: 'Reset to defaults',
-    tip_fx: 'Longitudinal force from the pedals. Gas pulls forward (front-wheel drive), brake holds back. Limited by grip: |Fx| ≤ Kx·μ·Fz_dyn.',
-    tip_fy: 'Lateral force needed for the turn: share·m·v²/R, R = L/tan δ. The tire can only deliver what the friction ellipse leaves after Fx.',
-    tip_fres: 'Vector sum of Fx and Fy. Its tip must stay inside the friction ellipse.',
-    tip_lim: 'Grip ellipse: longitudinal limit Kx·μ·Fz_dyn, lateral limit Ky·μ·Fz_dyn. The limits grow under braking (weight transfers to the front axle) and shrink under gas (weight transfers back).',
-    tip_fz: 'Current load on the front axle: static weight share plus or minus longitudinal weight transfer.',
-    tip_util: 'Share of the grip ellipse demanded by the pedals and cornering together, with Fx and Fy normalized to their own axes. Values over 100% mean the request exceeds the limit.',
-    tip_fyav: 'Lateral force still available at the current Fx: Ky·μ·Fz·√(1 − (Fx/(Kx·μ·Fz))²). Shown when the tire is saturated or locked.',
-    tip_slip: 'Angle between wheel heading and the actual velocity vector. Grows as the tire saturates — the car understeers.',
+    tip_fx: 'Longitudinal force from the pedals: gas pulls forward (front-wheel drive), brake holds back. The grip circle sets the maximum — the lower the load on the tire or the grip of the road, the lower the limit.',
+    tip_fy: 'Lateral force needed for the turn. The tighter the turn and the higher the speed, the more it takes. The tire can only deliver what the grip circle leaves after the longitudinal force.',
+    tip_fres: 'Sum of the longitudinal and lateral forces. On the diagram its tip must stay inside the grip circle.',
+    tip_lim: 'Grip limit: the maximum total force the tire can transfer to the road. It grows under braking (weight shifts to the front axle) and shrinks under gas (weight shifts back).',
+    tip_fz: 'Current load on the front axle: static weight plus or minus weight transfer under gas and braking.',
+    tip_util: 'Share of the grip circle demanded by the pedals and cornering together. Over 100% means the request exceeds the limit and the tire saturates.',
+    tip_fyav: 'Lateral force still available at the current longitudinal force. The harder you press a pedal, the less remains for cornering. Shown when the tire is saturated or locked.',
+    tip_slip: 'Angle between the wheel heading and the actual direction of motion. Grows as the tire saturates — the car understeers.',
     s_dry: 'Dry asphalt (μ = 1.0)',
     s_wet: 'Wet road (μ = 0.6)',
     s_ice: 'Ice (μ = 0.2)',
@@ -403,6 +405,8 @@ const I18N = {
     sub: 'Как разгон или торможение в повороте влияет на сцепление передних колёс (модель с передним приводом)',
     h2_wheel: 'Колесо (вид сверху)',
     h2_circle: 'Круг сцепления',
+    tip_wheel: 'Оранжевая стрелка — сила от педалей, голубая — поворот, серая — направление колёс, зелёная — движение. Отставание зелёной от серой — снос.',
+    tip_circle: 'Предел сцепления шины. Сумма сил от педалей и поворота должна оставаться внутри; эллипс — потому что шина выдаёт разную силу вдоль и поперёк дороги.',
     straight: 'прямо',
     ax_fx_r: 'Fx — разгон →',
     ax_fx_l: '← тормоз — Fx',
@@ -438,14 +442,14 @@ const I18N = {
     p_kx: 'Продольный предел Kx',
     p_ky: 'Боковой предел Ky',
     p_reset: 'Сбросить параметры',
-    tip_fx: 'Продольная сила от педалей. Газ тянет вперёд (передний привод), тормоз удерживает назад. Ограничена сцеплением: |Fx| ≤ Kx·μ·Fz_дин.',
-    tip_fy: 'Боковая сила, нужная для поворота: доля·m·v²/R, где R = L/tan δ. Шина выдаёт лишь остаток эллипса сцепления после Fx.',
-    tip_fres: 'Векторная сумма Fx и Fy. Её конец должен оставаться внутри эллипса сцепления.',
-    tip_lim: 'Эллипс сцепления: продольный предел Kx·μ·Fz_дин, боковой предел Ky·μ·Fz_дин. Пределы растут при торможении (вес переносится на передок), падают при газе (вес уходит назад).',
-    tip_fz: 'Текущая нагрузка на переднюю ось: статическая доля веса плюс/минус продольный перенос веса.',
-    tip_util: 'Доля эллипса сцепления, которую требуют педали и поворот вместе, с Fx и Fy, нормированными по своим осям. Больше 100% — запрос выходит за предел.',
-    tip_fyav: 'Боковая сила, ещё доступная при текущем Fx: Ky·μ·Fz·√(1 − (Fx/(Kx·μ·Fz))²). Показывается при насыщении или блокировке шины.',
-    tip_slip: 'Угол между направлением колёс и фактическим вектором скорости. Растёт при насыщении шины — машина недоповорачивает.',
+    tip_fx: 'Продольная сила от педалей: газ тянет вперёд (передний привод), тормоз удерживает назад. Максимум задаёт круг сцепления — чем меньше нагрузка на колесо или сцепление дороги, тем ниже предел.',
+    tip_fy: 'Боковая сила, которая нужна для поворота. Чем круче поворот и выше скорость, тем больше требуется. Шина выдаёт лишь остаток круга сцепления после продольной силы.',
+    tip_fres: 'Сумма продольной и боковой сил. На диаграмме её конец должен оставаться внутри круга сцепления.',
+    tip_lim: 'Предел сцепления: максимальная суммарная сила, которую шина может передать дороге. Растёт при торможении (вес переносится на передок), падает при газе (вес уходит назад).',
+    tip_fz: 'Текущая нагрузка на переднюю ось: статический вес плюс или минус перенос веса при разгоне и торможении.',
+    tip_util: 'Какую долю круга сцепления требуют педали и поворот вместе. Больше ста процентов — запрос выходит за предел, шина насыщается.',
+    tip_fyav: 'Боковая сила, которая ещё остаётся при текущей продольной. Чем сильнее жмёте педаль, тем меньше остаётся на поворот. Показывается при насыщении или блокировке шины.',
+    tip_slip: 'Угол между направлением колёс и фактическим направлением движения. Растёт при насыщении шины — машина недоповорачивает.',
     s_dry: 'Сухой асфальт (μ = 1,0)',
     s_wet: 'Мокрая дорога (μ = 0,6)',
     s_ice: 'Лёд (μ = 0,2)',

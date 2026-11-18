@@ -179,11 +179,11 @@
       <svg viewBox="0 0 440 400">
         <line x1="220" y1="30" x2="220" y2="370" class="axline"/>
         <line x1="40" y1="200" x2="400" y2="200" class="axline"/>
+        <g id="dynCircle"></g>
         <text x="400" y="190" class="mut" font-size="12" text-anchor="end" data-i18n="ax_fx_r">Fx — accel →</text>
         <text x="42" y="190" class="mut" font-size="12" data-i18n="ax_fx_l">← brake — Fx</text>
         <text x="228" y="46" class="mut" font-size="12" data-i18n="ax_fy_t">Fy — turn left</text>
         <text x="228" y="366" class="mut" font-size="12" data-i18n="ax_fy_b">Fy — turn right</text>
-        <g id="dynCircle"></g>
       </svg>
     </section>
   </div>
@@ -309,6 +309,7 @@
 const G = 9.81;
 const BIAS = 0.7;
 const SLIDE = 0.7;
+const CIRCLE_R = 95;
 const DEF_MASS = 1400, DEF_BASE = 2.7, DEF_H = 0.5, DEF_SHARE = 0.6;
 const DEF_KX = 1.1, DEF_KY = 0.9;
 const FX_GAS_MAX = 8000;
@@ -537,7 +538,7 @@ function compute() {
   }
   const LIMIT = mu * fzDyn;
   const limX = KX * LIMIT, limY = KY * LIMIT;
-  const K_CIRCLE = 140 / limX;
+  const K_CIRCLE = CIRCLE_R / (KX * mu * fzSt);
   let fy = 0;
   if (Math.abs(delta) > 0.05) {
     const R = BASE / Math.tan(Math.abs(delta) * Math.PI / 180);
@@ -590,7 +591,7 @@ function compute() {
   const fyS = fy * sgn;
   const fyP = Math.max(-limY, Math.min(limY, fyS)) * K_CIRCLE;
   const resX = fxP, resY = fyAch * sgn * K_CIRCLE;
-  let dc = `<ellipse cx="${CX}" cy="${CY}" rx="140" ry="${f1(140 * KY / KX)}" class="limc" stroke-width="2"/>`;
+  let dc = `<ellipse cx="${CX}" cy="${CY}" rx="${f1(limX * K_CIRCLE)}" ry="${f1(limY * K_CIRCLE)}" class="limc" stroke-width="2"/>`;
   if (!$('abs').checked) {
     const thr = SLIDE * limX * K_CIRCLE;
     dc += `<circle cx="${f1(CX - thr)}" cy="${CY}" r="4.5" class="thr${locked && fxReq < 0 ? ' hit' : ''}"/>`;

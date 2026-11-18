@@ -179,7 +179,6 @@
       <svg viewBox="0 0 440 400">
         <line x1="220" y1="30" x2="220" y2="370" class="axline"/>
         <line x1="40" y1="200" x2="400" y2="200" class="axline"/>
-        <circle cx="220" cy="200" r="140" class="limc" stroke-width="2"/>
         <text x="400" y="190" class="mut" font-size="12" text-anchor="end" data-i18n="ax_fx_r">Fx — accel →</text>
         <text x="42" y="190" class="mut" font-size="12" data-i18n="ax_fx_l">← brake — Fx</text>
         <text x="228" y="46" class="mut" font-size="12" data-i18n="ax_fy_t">Fy — turn left</text>
@@ -272,6 +271,14 @@
         <label><span data-i18n="p_share">Front axle load share</span> <span id="pShareV">60%</span></label>
         <input type="range" id="pShare" min="45" max="65" step="1" value="60">
       </div>
+      <div class="pitem">
+        <label><span data-i18n="p_kx">Longitudinal limit Kx</span> <span id="pKxV">1.10</span></label>
+        <input type="range" id="pKx" min="0.8" max="1.3" step="0.05" value="1.1">
+      </div>
+      <div class="pitem">
+        <label><span data-i18n="p_ky">Lateral limit Ky</span> <span id="pKyV">0.90</span></label>
+        <input type="range" id="pKy" min="0.8" max="1.3" step="0.05" value="0.9">
+      </div>
     </div>
     <button id="pReset" class="params-reset" data-i18n="p_reset">Reset to defaults</button>
     <p id="paramsLine" class="params-note" data-i18n="params"></p>
@@ -303,10 +310,11 @@ const G = 9.81;
 const BIAS = 0.7;
 const SLIDE = 0.7;
 const DEF_MASS = 1400, DEF_BASE = 2.7, DEF_H = 0.5, DEF_SHARE = 0.6;
+const DEF_KX = 1.1, DEF_KY = 0.9;
 const FX_GAS_MAX = 8000;
 const FX_BRAKE_MAX = 12000;
 const FZ_DEF = DEF_SHARE * DEF_MASS * G;
-let MASS = DEF_MASS, BASE = DEF_BASE, H = DEF_H, SHARE = DEF_SHARE;
+let MASS = DEF_MASS, BASE = DEF_BASE, H = DEF_H, SHARE = DEF_SHARE, KX = DEF_KX, KY = DEF_KY;
 const CX = 220, CY = 200;
 const WHEEL_RATIO = 540 / 30;
 
@@ -329,9 +337,9 @@ const I18N = {
     leg_fy: 'Fy — lateral force (cornering)',
     leg_res: 'resultant within grip and direction of motion',
     leg_sat: 'tire saturation (grip limit exceeded)',
-    leg_thr: 'lockup threshold (ABS off): |Fx| = 0.7·μ·Fz_dyn',
+    leg_thr: 'lockup threshold (ABS off): |Fx| = 0.7·Kx·μ·Fz_dyn',
     leg_head: 'wheel heading',
-    params: 'm = {m} kg · wheelbase L = {l} m · CG height h = {h} m · front axle load ≈ {s}% of weight (Fz ≈ {fz} static) · grip limit μ·Fz_dyn · braking 70% on front axle · front-wheel drive · turn radius R = L / tan δ · with ABS off: lockup when |Fx| > 0.7·μ·Fz_dyn, lateral force of a sliding tire = 0',
+    params: 'm = {m} kg · wheelbase L = {l} m · CG height h = {h} m · front axle load ≈ {s}% of weight (Fz ≈ {fz} static) · grip ellipse: longitudinal limit Kx·μ·Fz_dyn (Kx = {kx}), lateral limit Ky·μ·Fz_dyn (Ky = {ky}) · braking 70% on front axle · front-wheel drive · turn radius R = L / tan δ · with ABS off: lockup when |Fx| > 0.7·Kx·μ·Fz_dyn, lateral force of a sliding tire = 0',
     c_gas: 'Throttle',
     c_brake: 'Brake',
     c_steer: 'Steering wheel',
@@ -345,14 +353,16 @@ const I18N = {
     p_base: 'Wheelbase',
     p_h: 'CG height',
     p_share: 'Front axle load share',
+    p_kx: 'Longitudinal limit Kx',
+    p_ky: 'Lateral limit Ky',
     p_reset: 'Reset to defaults',
-    tip_fx: 'Longitudinal force from the pedals. Gas pulls forward (front-wheel drive), brake holds back. Limited by grip: |Fx| ≤ μ·Fz_dyn.',
-    tip_fy: 'Lateral force needed for the turn: share·m·v²/R, R = L/tan δ. The tire can only deliver what the friction circle leaves after Fx.',
-    tip_fres: 'Vector sum of Fx and Fy. Its tip must stay inside the friction circle.',
-    tip_lim: 'Grip limit μ·Fz_dyn. Grows under braking (weight transfers to the front axle), shrinks under gas (weight transfers back).',
+    tip_fx: 'Longitudinal force from the pedals. Gas pulls forward (front-wheel drive), brake holds back. Limited by grip: |Fx| ≤ Kx·μ·Fz_dyn.',
+    tip_fy: 'Lateral force needed for the turn: share·m·v²/R, R = L/tan δ. The tire can only deliver what the friction ellipse leaves after Fx.',
+    tip_fres: 'Vector sum of Fx and Fy. Its tip must stay inside the friction ellipse.',
+    tip_lim: 'Grip ellipse: longitudinal limit Kx·μ·Fz_dyn, lateral limit Ky·μ·Fz_dyn. The limits grow under braking (weight transfers to the front axle) and shrink under gas (weight transfers back).',
     tip_fz: 'Current load on the front axle: static weight share plus or minus longitudinal weight transfer.',
-    tip_util: 'Share of the grip limit demanded by the pedals and cornering together. Values over 100% mean the request exceeds the limit.',
-    tip_fyav: 'Lateral force still available at the current Fx: √((μ·Fz)² − Fx²). Shown when the tire is saturated or locked.',
+    tip_util: 'Share of the grip ellipse demanded by the pedals and cornering together, with Fx and Fy normalized to their own axes. Values over 100% mean the request exceeds the limit.',
+    tip_fyav: 'Lateral force still available at the current Fx: Ky·μ·Fz·√(1 − (Fx/(Kx·μ·Fz))²). Shown when the tire is saturated or locked.',
     tip_slip: 'Angle between wheel heading and the actual velocity vector. Grows as the tire saturates — the car understeers.',
     s_dry: 'Dry asphalt (μ = 1.0)',
     s_wet: 'Wet road (μ = 0.6)',
@@ -396,9 +406,9 @@ const I18N = {
     leg_fy: 'Fy — боковая сила (поворот)',
     leg_res: 'результирующая в пределах сцепления и направление движения',
     leg_sat: 'насыщение шины (превышение предела сцепления)',
-    leg_thr: 'порог блокировки (ABS выкл): |Fx| = 0,7·μ·Fz_дин',
+    leg_thr: 'порог блокировки (ABS выкл): |Fx| = 0,7·Kx·μ·Fz_дин',
     leg_head: 'направление колёс',
-    params: 'm = {m} кг · база L = {l} м · высота центра тяжести h = {h} м · нагрузка на переднюю ось ≈ {s}% массы (Fz ≈ {fz} стат.) · предел сцепления μ·Fz_дин · торможение 70% на переднюю ось · передний привод · радиус поворота R = L / tan δ · при ABS выкл: блокировка при |Fx| > 0.7·μ·Fz_дин, боковая сила скользящего колеса = 0',
+    params: 'm = {m} кг · база L = {l} м · высота центра тяжести h = {h} м · нагрузка на переднюю ось ≈ {s}% массы (Fz ≈ {fz} стат.) · эллипс сцепления: продольный предел Kx·μ·Fz_дин (Kx = {kx}), боковой предел Ky·μ·Fz_дин (Ky = {ky}) · торможение 70% на переднюю ось · передний привод · радиус поворота R = L / tan δ · при ABS выкл: блокировка при |Fx| > 0.7·Kx·μ·Fz_дин, боковая сила скользящего колеса = 0',
     c_gas: 'Газ',
     c_brake: 'Тормоз',
     c_steer: 'Руль',
@@ -412,14 +422,16 @@ const I18N = {
     p_base: 'Колёсная база',
     p_h: 'Высота центра тяжести',
     p_share: 'Доля нагрузки на переднюю ось',
+    p_kx: 'Продольный предел Kx',
+    p_ky: 'Боковой предел Ky',
     p_reset: 'Сбросить параметры',
-    tip_fx: 'Продольная сила от педалей. Газ тянет вперёд (передний привод), тормоз удерживает назад. Ограничена сцеплением: |Fx| ≤ μ·Fz_дин.',
-    tip_fy: 'Боковая сила, нужная для поворота: доля·m·v²/R, где R = L/tan δ. Шина выдаёт лишь остаток круга сцепления после Fx.',
-    tip_fres: 'Векторная сумма Fx и Fy. Её конец должен оставаться внутри круга сцепления.',
-    tip_lim: 'Предел сцепления μ·Fz_дин. Растёт при торможении (вес переносится на передок), падает при газе (вес уходит назад).',
+    tip_fx: 'Продольная сила от педалей. Газ тянет вперёд (передний привод), тормоз удерживает назад. Ограничена сцеплением: |Fx| ≤ Kx·μ·Fz_дин.',
+    tip_fy: 'Боковая сила, нужная для поворота: доля·m·v²/R, где R = L/tan δ. Шина выдаёт лишь остаток эллипса сцепления после Fx.',
+    tip_fres: 'Векторная сумма Fx и Fy. Её конец должен оставаться внутри эллипса сцепления.',
+    tip_lim: 'Эллипс сцепления: продольный предел Kx·μ·Fz_дин, боковой предел Ky·μ·Fz_дин. Пределы растут при торможении (вес переносится на передок), падают при газе (вес уходит назад).',
     tip_fz: 'Текущая нагрузка на переднюю ось: статическая доля веса плюс/минус продольный перенос веса.',
-    tip_util: 'Доля предела сцепления, которую требуют педали и поворот вместе. Больше 100% — запрос выходит за предел.',
-    tip_fyav: 'Боковая сила, ещё доступная при текущем Fx: √((μ·Fz)² − Fx²). Показывается при насыщении или блокировке шины.',
+    tip_util: 'Доля эллипса сцепления, которую требуют педали и поворот вместе, с Fx и Fy, нормированными по своим осям. Больше 100% — запрос выходит за предел.',
+    tip_fyav: 'Боковая сила, ещё доступная при текущем Fx: Ky·μ·Fz·√(1 − (Fx/(Kx·μ·Fz))²). Показывается при насыщении или блокировке шины.',
     tip_slip: 'Угол между направлением колёс и фактическим вектором скорости. Растёт при насыщении шины — машина недоповорачивает.',
     s_dry: 'Сухой асфальт (μ = 1,0)',
     s_wet: 'Мокрая дорога (μ = 0,6)',
@@ -469,6 +481,7 @@ function applyLang() {
 const kn = n => (n / 1000).toFixed(2) + t('u_kn');
 const f1 = n => n.toFixed(1);
 const dec = n => { const s = n.toFixed(1); return lang === 'ru' ? s.replace('.', ',') : s; };
+const dec2 = n => { const s = n.toFixed(2); return lang === 'ru' ? s.replace('.', ',') : s; };
 
 function ln(x1, y1, x2, y2, cls, w, mk) {
   return `<line x1="${f1(x1)}" y1="${f1(y1)}" x2="${f1(x2)}" y2="${f1(y2)}" class="${cls}" stroke-width="${w}" marker-end="url(#${mk})"/>`;
@@ -483,10 +496,14 @@ function compute() {
   BASE = +$('pBase').value;
   H = +$('pH').value;
   SHARE = +$('pShare').value / 100;
+  KX = +$('pKx').value;
+  KY = +$('pKy').value;
   $('pMassV').textContent = MASS + t('u_kg');
   $('pBaseV').textContent = dec(BASE) + t('u_m');
   $('pHV').textContent = dec(H) + t('u_m');
   $('pShareV').textContent = Math.round(SHARE * 100) + '%';
+  $('pKxV').textContent = dec2(KX);
+  $('pKyV').textContent = dec2(KY);
   const fzSt = SHARE * MASS * G;
   const fxGasMax = FX_GAS_MAX * fzSt / FZ_DEF;
   const fxBrakeMax = FX_BRAKE_MAX * fzSt / FZ_DEF;
@@ -505,11 +522,11 @@ function compute() {
     return Math.min(0.9 * MASS * G, Math.max(0.25 * MASS * G, MASS * (SHARE * G + ax * H / BASE)));
   };
   let fzDyn = fzFor(fxReq);
-  const locked = !$('abs').checked && Math.abs(fxReq) > slideMu * fzDyn;
+  const locked = !$('abs').checked && Math.abs(fxReq) > slideMu * KX * fzDyn;
   const applyGrip = fz => {
-    if (locked) return Math.sign(fxReq) * slideMu * fz;
-    const cap = (fxReq < 0 ? BIAS : 1) * mu * MASS * G;
-    return Math.sign(fxReq) * Math.min(Math.abs(fxReq), mu * fz, cap);
+    if (locked) return Math.sign(fxReq) * slideMu * KX * fz;
+    const cap = (fxReq < 0 ? BIAS : 1) * mu * KX * MASS * G;
+    return Math.sign(fxReq) * Math.min(Math.abs(fxReq), mu * KX * fz, cap);
   };
   let fx = applyGrip(fzDyn);
   for (let i = 0; i < 10; i++) {
@@ -519,16 +536,17 @@ function compute() {
     fx = applyGrip(fzDyn);
   }
   const LIMIT = mu * fzDyn;
-  const K_CIRCLE = 140 / LIMIT;
+  const limX = KX * LIMIT, limY = KY * LIMIT;
+  const K_CIRCLE = 140 / limX;
   let fy = 0;
   if (Math.abs(delta) > 0.05) {
     const R = BASE / Math.tan(Math.abs(delta) * Math.PI / 180);
     fy = SHARE * MASS * V * V / R;
   }
-  const util = Math.hypot(fx, fy) / LIMIT;
-  const utilReq = Math.hypot(fxReq, fy) / LIMIT;
+  const util = Math.sqrt((fx / limX) ** 2 + (fy / limY) ** 2);
+  const utilReq = Math.sqrt((fxReq / limX) ** 2 + (fy / limY) ** 2);
   const sat = util > 1;
-  const fyAvail = locked ? 0 : Math.sqrt(Math.max(0, LIMIT * LIMIT - fx * fx));
+  const fyAvail = locked ? 0 : limY * Math.sqrt(Math.max(0, 1 - (fx / limX) ** 2));
   const slide = sat || locked;
 
   const rad = delta * Math.PI / 180;
@@ -570,11 +588,11 @@ function compute() {
   const fxP = fx * K_CIRCLE;
   const fxReqP = Math.max(-172, Math.min(172, fxReq * K_CIRCLE));
   const fyS = fy * sgn;
-  const fyP = Math.max(-LIMIT, Math.min(LIMIT, fyS)) * K_CIRCLE;
+  const fyP = Math.max(-limY, Math.min(limY, fyS)) * K_CIRCLE;
   const resX = fxP, resY = fyAch * sgn * K_CIRCLE;
-  let dc = '';
+  let dc = `<ellipse cx="${CX}" cy="${CY}" rx="140" ry="${f1(140 * KY / KX)}" class="limc" stroke-width="2"/>`;
   if (!$('abs').checked) {
-    const thr = SLIDE * LIMIT * K_CIRCLE;
+    const thr = SLIDE * limX * K_CIRCLE;
     dc += `<circle cx="${f1(CX - thr)}" cy="${CY}" r="4.5" class="thr${locked && fxReq < 0 ? ' hit' : ''}"/>`;
     dc += `<circle cx="${f1(CX + thr)}" cy="${CY}" r="4.5" class="thr${locked && fxReq > 0 ? ' hit' : ''}"/>`;
   }
@@ -600,15 +618,18 @@ function compute() {
   $('rSlip').style.color = slip > 0.05 ? 'var(--red)' : '';
   $('paramsLine').textContent = t('params')
     .replace('{m}', MASS).replace('{l}', dec(BASE)).replace('{h}', dec(H))
-    .replace('{s}', Math.round(SHARE * 100)).replace('{fz}', kn(fzSt));
+    .replace('{s}', Math.round(SHARE * 100)).replace('{fz}', kn(fzSt))
+    .replace('{kx}', dec(KX)).replace('{ky}', dec(KY));
 }
 
-['gas', 'brake', 'steer', 'speed', 'surface', 'abs', 'pMass', 'pBase', 'pH', 'pShare'].forEach(id => $(id).addEventListener('input', compute));
+['gas', 'brake', 'steer', 'speed', 'surface', 'abs', 'pMass', 'pBase', 'pH', 'pShare', 'pKx', 'pKy'].forEach(id => $(id).addEventListener('input', compute));
 $('pReset').addEventListener('click', () => {
   $('pMass').value = DEF_MASS;
   $('pBase').value = DEF_BASE;
   $('pH').value = DEF_H;
   $('pShare').value = DEF_SHARE * 100;
+  $('pKx').value = DEF_KX;
+  $('pKy').value = DEF_KY;
   compute();
 });
 

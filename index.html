@@ -190,14 +190,14 @@
 
   <div class="controls">
     <div class="ctl" id="gasC">
-      <label><span data-i18n="c_gas">Throttle</span> <span id="gasV">0%</span></label>
+      <label><span class="nowrap"><span data-i18n="c_gas">Throttle</span> <i class="qm" data-tipkey="tip_gas">?</i></span> <span id="gasV">0%</span></label>
       <input type="range" id="gas" min="0" max="100" step="1" value="0">
     </div>
     <div class="ctl" id="brakeC">
       <div class="ctl-head">
-        <span data-i18n="c_brake">Brake</span>
+        <span class="nowrap"><span data-i18n="c_brake">Brake</span> <i class="qm" data-tipkey="tip_brake">?</i></span>
         <span class="ctl-right">
-          <button id="absBtn" class="abs-btn" type="button" aria-pressed="true">ABS</button>
+          <button id="absBtn" class="abs-btn" type="button" aria-pressed="true">ABS</button><i class="qm" data-tipkey="tip_abs">?</i>
           <span id="brakeV">0%</span>
         </span>
       </div>
@@ -205,7 +205,7 @@
       <input type="range" id="brake" min="0" max="100" step="1" value="0">
     </div>
     <div class="ctl steer" id="steerC">
-      <label><span data-i18n="c_steer">Steering wheel</span> <span id="steerV">6°</span></label>
+      <label><span class="nowrap"><span data-i18n="c_steer">Steering wheel</span> <i class="qm" data-tipkey="tip_steer">?</i></span> <span id="steerV">6°</span></label>
       <div class="wheelwrap">
         <svg viewBox="-72 -72 144 144" aria-hidden="true">
           <defs>
@@ -228,11 +228,11 @@
       <input type="range" id="steer" min="-30" max="30" step="0.5" value="6">
     </div>
     <div class="ctl" id="speedC">
-      <label><span data-i18n="c_speed">Speed</span> <span id="speedV">50 km/h</span></label>
+      <label><span class="nowrap"><span data-i18n="c_speed">Speed</span> <i class="qm" data-tipkey="tip_speed">?</i></span> <span id="speedV">50 km/h</span></label>
       <input type="range" id="speed" min="20" max="100" step="5" value="50">
     </div>
     <div class="ctl" id="surfaceC">
-      <label data-i18n="c_surface">Surface</label>
+      <label><span class="nowrap"><span data-i18n="c_surface">Surface</span> <i class="qm" data-tipkey="tip_surface">?</i></span></label>
       <select id="surface">
         <option value="1.0" selected data-i18n="s_dry">Dry asphalt (μ = 1.0)</option>
         <option value="0.6" data-i18n="s_wet">Wet road (μ = 0.6)</option>
@@ -349,6 +349,12 @@ const I18N = {
     c_abs: 'ABS (anti-lock braking system)',
     abs_on: 'on',
     abs_off: 'off',
+    tip_gas: 'Throttle sets acceleration. Under acceleration weight transfers to the rear — the front tires\' grip circle shrinks, leaving less reserve for cornering.',
+    tip_brake: 'Brake sets deceleration. Braking transfers weight to the front axle — the front tires\' grip circle grows — but the braking force itself consumes part of the grip available for cornering.',
+    tip_steer: 'Steering angle sets the turn radius: the more the wheels are turned, the tighter the turn and the more lateral force the tire must deliver.',
+    tip_speed: 'The higher the speed, the more lateral force the tire needs to corner: double the speed means four times the load on the tire.',
+    tip_surface: 'Surface determines how much grip the road offers: the grip circle is small on ice and large on dry asphalt.',
+    tip_abs: 'ABS keeps braking and traction within the grip limit, preserving the lateral reserve. Turn it off to see wheel lockup: the car stops turning.',
     p_sum: 'Model parameters',
     p_mass: 'Vehicle mass',
     p_base: 'Wheelbase',
@@ -418,6 +424,12 @@ const I18N = {
     c_abs: 'ABS (антиблокировочная система)',
     abs_on: 'вкл',
     abs_off: 'выкл',
+    tip_gas: 'Газ задаёт ускорение автомобиля (разгон). При разгоне вес переносится на заднюю ось — круг сцепления передних колёс сжимается, и на поворот остаётся меньше запаса.',
+    tip_brake: 'Тормоз задаёт замедление. При торможении вес переносится на переднюю ось — круг сцепления передних колёс растёт, но сама тормозная сила отнимает часть сцепления, доступного для поворота.',
+    tip_steer: 'Угол поворота колёс задаёт радиус поворота: чем сильнее вывернуты колёса, тем круче поворот и тем больше боковой силы требуется от шины.',
+    tip_speed: 'Чем выше скорость, тем больше боковой силы нужно шине для поворота: при двойной скорости нагрузка на шину возрастает вчетверо.',
+    tip_surface: 'Поверхность определяет, сколько сцепления даёт дорога: на льду круг сцепления мал, на сухом асфальте — большой.',
+    tip_abs: 'ABS удерживает торможение и разгон в пределах сцепления, сохраняя запас по боковой силе. Выключите, чтобы увидеть блокировку колёс: машина перестанет поворачивать.',
     p_sum: 'Параметры модели',
     p_mass: 'Масса автомобиля',
     p_base: 'Колёсная база',
